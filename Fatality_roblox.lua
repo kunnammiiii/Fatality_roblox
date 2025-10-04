@@ -202,7 +202,7 @@ end
 
 local CombatContent = createTabContent("Combat")
 local VisualsContent = createTabContent("Visuals")
-createTabContent("Misc")
+local MiscContent = createTabContent("Misc")
 createTabContent("Players")
 createTabContent("Settings")
 
@@ -253,21 +253,40 @@ local VisualsFeatures = {
         {Type = "TextBox", Name = "Notification Size", Value = "16"}
     }},
     {Name = "Hit Particles", Settings = {
-        {Type = "Checkbox", Name = "Enable Particles", Checked = false},
+        {Type = "Checkbox", Name = "Enable Particles", Checked = true},
         {Type = "TextBox", Name = "Particle Size", Value = "1"},
         {Type = "TextBox", Name = "Particle Color R", Value = "255"},
         {Type = "TextBox", Name = "Particle Color G", Value = "0"},
         {Type = "TextBox", Name = "Particle Color B", Value = "0"}
     }},
     {Name = "Kill Effect", Settings = {
-        {Type = "Checkbox", Name = "Enable Kill Effect", Checked = false},
+        {Type = "Checkbox", Name = "Enable Kill Effect", Checked = true},
         {Type = "TextBox", Name = "Effect Intensity", Value = "1"}
+    }},
+    {Name = "Custom Crosshair", Settings = {
+        {Type = "Checkbox", Name = "Enable Crosshair", Checked = true},
+        {Type = "TextBox", Name = "Crosshair Size", Value = "10"},
+        {Type = "TextBox", Name = "Crosshair Color R", Value = "255"},
+        {Type = "TextBox", Name = "Crosshair Color G", Value = "255"},
+        {Type = "TextBox", Name = "Crosshair Color B", Value = "255"}
+    }},
+    {Name = "Hitmarker", Settings = {
+        {Type = "Checkbox", Name = "Enable Hitmarker", Checked = true},
+        {Type = "TextBox", Name = "Hitmarker Size", Value = "20"}
+    }},
+    {Name = "Damage Indicator", Settings = {
+        {Type = "Checkbox", Name = "Enable Indicator", Checked = true},
+        {Type = "TextBox", Name = "Text Size", Value = "14"}
+    }},
+    {Name = "Model Swap", Settings = {
+        {Type = "Mode", Name = "Model Style", Options = {"CJ Ballas", "Neon Cyberpunk", "Retro Gangster", "Anime Thug", "Street Punk"}, Selected = "CJ Ballas"},
+        {Type = "Checkbox", Name = "Enable Model Swap", Checked = true}
     }}
 }
 
 local MiscFeatures = {
     {Name = "Shift Lock", Settings = {
-        {Type = "Checkbox", Name = "Enable Shift Lock", Checked = false},
+        {Type = "Checkbox", Name = "Enable Shift Lock", Checked = true},
         {Type = "TextBox", Name = "Shift Speed", Value = "5"}
     }}
 }
@@ -278,7 +297,7 @@ local function createFeature(feature, parent)
     FeatureToggle.Size = UDim2.new(1, 0, 0, 30)
     FeatureToggle.BackgroundColor3 = Colors.Dark
     FeatureToggle.BorderSizePixel = 0
-    FeatureToggle.Text = feature.Name .. ": OFF"
+    FeatureToggle.Text = feature.Name .. ": " .. (feature.Settings[1].Checked and "ON" or "OFF")
     FeatureToggle.TextColor3 = Colors.White
     FeatureToggle.TextScaled = true
     FeatureToggle.Font = Enum.Font.Gotham
@@ -288,7 +307,7 @@ local function createFeature(feature, parent)
     FeatureToggleCorner.CornerRadius = UDim.new(0, 4)
     FeatureToggleCorner.Parent = FeatureToggle
 
-    local isEnabled = false
+    local isEnabled = feature.Settings[1].Checked
     FeatureToggle.MouseButton1Click:Connect(function()
         isEnabled = not isEnabled
         FeatureToggle.Text = feature.Name .. ": " .. (isEnabled and "ON" or "OFF")
@@ -508,7 +527,7 @@ for _, feature in ipairs(VisualsFeatures) do
     createFeature(feature, VisualsContent)
 end
 for _, feature in ipairs(MiscFeatures) do
-    createFeature(feature, createTabContent("Misc"))
+    createFeature(feature, MiscContent)
 end
 
 local firstTab = TabButtons[1]
@@ -824,7 +843,7 @@ getgenv().Fatality_Speed_Speed_Multiplier = 2
 getgenv().Fatality_Speed_Burst_Duration = 0.5
 getgenv().Fatality_Speed_Sync_with_Blink = true
 
-getgenv().Fatality_Shift_Lock_Enabled = false
+getgenv().Fatality_Shift_Lock_Enabled = true
 getgenv().Fatality_Shift_Lock_Shift_Speed = 5
 
 local RunService = game:GetService("RunService")
@@ -929,7 +948,7 @@ getgenv().Fatality_ESP_Hitbox_Health_Bar_Color_B = 0
 getgenv().Fatality_ESP_Hitbox_Distance_Limit = 1000
 getgenv().Fatality_ESP_Hitbox_Glow_Intensity = 0.3
 
-getgenv().Fatality_Bullet_Tracers_Enabled = false
+getgenv().Fatality_Bullet_Tracers_Enabled = true
 getgenv().Fatality_Bullet_Tracers_Tracer_Style = "Glow"
 getgenv().Fatality_Bullet_Tracers_Line_Width = 2
 getgenv().Fatality_Bullet_Tracers_Color_R = 255
@@ -939,13 +958,13 @@ getgenv().Fatality_Bullet_Tracers_Duration = 1
 getgenv().Fatality_Bullet_Tracers_Glow_Intensity = 0.5
 getgenv().Fatality_Bullet_Tracers_Notification_Size = 16
 
-getgenv().Fatality_Hit_Particles_Enabled = false
+getgenv().Fatality_Hit_Particles_Enabled = true
 getgenv().Fatality_Hit_Particles_Particle_Size = 1
 getgenv().Fatality_Hit_Particles_Particle_Color_R = 255
 getgenv().Fatality_Hit_Particles_Particle_Color_G = 0
 getgenv().Fatality_Hit_Particles_Particle_Color_B = 0
 
-getgenv().Fatality_Kill_Effect_Enabled = false
+getgenv().Fatality_Kill_Effect_Enabled = true
 getgenv().Fatality_Kill_Effect_Effect_Intensity = 1
 
 local Players = game:GetService("Players")
@@ -1037,6 +1056,7 @@ local function createTracer(startPos, endPos)
 end
 
 local function createParticle(position)
+    if not getgenv().Fatality_Hit_Particles_Enabled then return end
     local particle = Instance.new("Part")
     particle.Size = Vector3.new(getgenv().Fatality_Hit_Particles_Particle_Size, getgenv().Fatality_Hit_Particles_Particle_Size, getgenv().Fatality_Hit_Particles_Particle_Size)
     particle.Position = position
@@ -1056,6 +1076,7 @@ local function createParticle(position)
 end
 
 local function createKillEffect(player)
+    if not getgenv().Fatality_Kill_Effect_Enabled then return end
     if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
         local effect = Instance.new("PointLight")
         effect.Brightness = getgenv().Fatality_Kill_Effect_Effect_Intensity
@@ -1072,19 +1093,46 @@ Players.PlayerRemoving:Connect(function(player)
     local healthBar = game.CoreGui:FindFirstChild(player.Name .. "_HealthBar")
     if healthBar then healthBar:Destroy() end
 end)
-getgenv().Fatality_Custom_Crosshair_Enabled = false
+
+RunService.RenderStepped:Connect(function()
+    if getgenv().Fatality_Bullet_Tracers_Enabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local gun = LocalPlayer.Character:FindFirstChildWhichIsA("Tool")
+        if gun then
+            local fireEvent = gun:FindFirstChild("Fire") or gun:FindFirstChild("Shoot")
+            if fireEvent then
+                fireEvent:Connect(function(targetPos)
+                    local startPos = Camera:WorldToScreenPoint(LocalPlayer.Character.HumanoidRootPart.Position)
+                    local endPos = Camera:WorldToScreenPoint(targetPos)
+                    createTracer(Vector2.new(startPos.X, startPos.Y), Vector2.new(endPos.X, endPos.Y))
+                end)
+            end
+        end
+    end
+end)
+
+LocalPlayer.CharacterAdded:Connect(function(character)
+    character.Humanoid.HealthChanged:Connect(function(health)
+        if health < character.Humanoid.MaxHealth then
+            createParticle(character.HumanoidRootPart.Position)
+        end
+    end)
+    character.Humanoid.Died:Connect(function()
+        createKillEffect(LocalPlayer)
+    end)
+end)
+getgenv().Fatality_Custom_Crosshair_Enabled = true
 getgenv().Fatality_Custom_Crosshair_Crosshair_Size = 10
 getgenv().Fatality_Custom_Crosshair_Crosshair_Color_R = 255
 getgenv().Fatality_Custom_Crosshair_Crosshair_Color_G = 255
 getgenv().Fatality_Custom_Crosshair_Crosshair_Color_B = 255
 
-getgenv().Fatality_Hitmarker_Enabled = false
+getgenv().Fatality_Hitmarker_Enabled = true
 getgenv().Fatality_Hitmarker_Hitmarker_Size = 20
 
-getgenv().Fatality_Damage_Indicator_Enabled = false
+getgenv().Fatality_Damage_Indicator_Enabled = true
 getgenv().Fatality_Damage_Indicator_Text_Size = 14
 
-getgenv().Fatality_Model_Swap_Enabled = false
+getgenv().Fatality_Model_Swap_Enabled = true
 getgenv().Fatality_Model_Swap_Model_Style = "CJ Ballas"
 
 local Players = game:GetService("Players")
@@ -1107,6 +1155,7 @@ local function createCrosshair()
 end
 
 local function createHitmarker()
+    if not getgenv().Fatality_Hitmarker_Enabled then return end
     local hitmarker = Instance.new("Frame")
     hitmarker.Size = UDim2.new(0, getgenv().Fatality_Hitmarker_Hitmarker_Size, 0, getgenv().Fatality_Hitmarker_Hitmarker_Size)
     hitmarker.Position = UDim2.new(0.5, -getgenv().Fatality_Hitmarker_Hitmarker_Size / 2, 0.5, -getgenv().Fatality_Hitmarker_Hitmarker_Size / 2)
@@ -1117,6 +1166,7 @@ local function createHitmarker()
 end
 
 local function createDamageIndicator(position, damage)
+    if not getgenv().Fatality_Damage_Indicator_Enabled then return end
     local billboard = Instance.new("BillboardGui")
     billboard.Size = UDim2.new(0, 100, 0, 30)
     billboard.AlwaysOnTop = true
@@ -1142,11 +1192,11 @@ local function applyModelSwap(player)
     if not player.Character then return end
     local style = getgenv().Fatality_Model_Swap_Model_Style
     local textures = {
-        ["CJ Ballas"] = {Shirt = "rbxassetid://123456789", Pants = "rbxassetid://987654321", Face = "rbxassetid://456789123", Color = Color3.fromRGB(128, 0, 128)},
-        ["Neon Cyberpunk"] = {Shirt = "rbxassetid://234567890", Pants = "rbxassetid://876543210", Face = "rbxassetid://345678901", Color = Color3.fromRGB(0, 255, 255)},
-        ["Retro Gangster"] = {Shirt = "rbxassetid://345678901", Pants = "rbxassetid://765432109", Face = "rbxassetid://234567890", Color = Color3.fromRGB(50, 50, 50)},
-        ["Anime Thug"] = {Shirt = "rbxassetid://456789012", Pants = "rbxassetid://654321098", Face = "rbxassetid://123456789", Color = Color3.fromRGB(255, 0, 255)},
-        ["Street Punk"] = {Shirt = "rbxassetid://567890123", Pants = "rbxassetid://543210987", Face = "rbxassetid://678901234", Color = Color3.fromRGB(255, 165, 0)}
+        ["CJ Ballas"] = {Shirt = "rbxassetid://1489665925", Pants = "rbxassetid://1489666023", Face = "rbxassetid://144075659", Color = Color3.fromRGB(128, 0, 128)},
+        ["Neon Cyberpunk"] = {Shirt = "rbxassetid://6067428139", Pants = "rbxassetid://6067428140", Face = "rbxassetid://144075659", Color = Color3.fromRGB(0, 255, 255)},
+        ["Retro Gangster"] = {Shirt = "rbxassetid://6067428139", Pants = "rbxassetid://6067428140", Face = "rbxassetid://144075659", Color = Color3.fromRGB(50, 50, 50)},
+        ["Anime Thug"] = {Shirt = "rbxassetid://6067428139", Pants = "rbxassetid://6067428140", Face = "rbxassetid://144075659", Color = Color3.fromRGB(255, 0, 255)},
+        ["Street Punk"] = {Shirt = "rbxassetid://6067428139", Pants = "rbxassetid://6067428140", Face = "rbxassetid://144075659", Color = Color3.fromRGB(255, 165, 0)}
     }
 
     local data = textures[style]
@@ -1198,4 +1248,10 @@ LocalPlayer.CharacterAdded:Connect(function(character)
     if getgenv().Fatality_Model_Swap_Enabled then
         applyModelSwap(LocalPlayer)
     end
+    character.Humanoid.HealthChanged:Connect(function(health)
+        if health < character.Humanoid.MaxHealth then
+            createHitmarker()
+            createDamageIndicator(character.HumanoidRootPart.Position, character.Humanoid.MaxHealth - health)
+        end
+    end)
 end)
