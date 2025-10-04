@@ -2,7 +2,6 @@ local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
-local RunService = game:GetService("RunService")
 
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
@@ -124,7 +123,11 @@ TabsCorner.CornerRadius = UDim.new(0, 8)
 TabsCorner.Parent = TabsFrame
 
 local TabButtons = {
-    {Name = "Combat", Text = "Combat"}
+    {Name = "Combat", Text = "Combat"},
+    {Name = "Visuals", Text = "Visuals"},
+    {Name = "Misc", Text = "Misc"},
+    {Name = "Players", Text = "Players"},
+    {Name = "Settings", Text = "Settings"}
 }
 
 local CurrentTab = nil
@@ -170,66 +173,34 @@ for i, tabData in ipairs(TabButtons) do
     end)
 end
 
-local CombatContent = Instance.new("ScrollingFrame")
-CombatContent.Name = "CombatContent"
-CombatContent.Size = UDim2.new(1, -130, 1, -45)
-CombatContent.Position = UDim2.new(0, 120, 0, 40)
-CombatContent.BackgroundTransparency = 1
-CombatContent.BorderSizePixel = 0
-CombatContent.ScrollBarThickness = 8
-CombatContent.CanvasSize = UDim2.new(0, 0, 0, 600)
-CombatContent.Visible = true
-CombatContent.Parent = MainFrame
+local function createTabContent(tabName)
+    local Content = Instance.new("ScrollingFrame")
+    Content.Name = tabName .. "Content"
+    Content.Size = UDim2.new(1, -130, 1, -45)
+    Content.Position = UDim2.new(0, 120, 0, 40)
+    Content.BackgroundTransparency = 1
+    Content.BorderSizePixel = 0
+    Content.ScrollBarThickness = 8
+    Content.CanvasSize = UDim2.new(0, 0, 0, 600)
+    Content.Visible = tabName == "Combat"
+    Content.Parent = MainFrame
 
-local CombatLayout = Instance.new("UIListLayout")
-CombatLayout.SortOrder = Enum.SortOrder.LayoutOrder
-CombatLayout.Padding = UDim.new(0, 5)
-CombatLayout.Parent = CombatContent
+    local Layout = Instance.new("UIListLayout")
+    Layout.SortOrder = Enum.SortOrder.LayoutOrder
+    Layout.Padding = UDim.new(0, 5)
+    Layout.Parent = Content
 
-local Features = {"Silent Aim", "Auto Pick", "Fake Lag"}
+    return Content
+end
 
-for _, featureName in ipairs(Features) do
-    local FeatureToggle = Instance.new("TextButton")
-    FeatureToggle.Name = featureName .. "Toggle"
-    FeatureToggle.Size = UDim2.new(1, 0, 0, 30)
-    FeatureToggle.BackgroundColor3 = Colors.Dark
-    FeatureToggle.BorderSizePixel = 0
-    FeatureToggle.Text = featureName .. ": OFF"
-    FeatureToggle.TextColor3 = Colors.White
-    FeatureToggle.TextScaled = true
-    FeatureToggle.Font = Enum.Font.Gotham
-    FeatureToggle.Parent = CombatContent
+local CombatContent = createTabContent("Combat")
+local VisualsContent = createTabContent("Visuals")
+createTabContent("Misc")
+createTabContent("Players")
+createTabContent("Settings")
 
-    local FeatureToggleCorner = Instance.new("UICorner")
-    FeatureToggleCorner.CornerRadius = UDim.new(0, 4)
-    FeatureToggleCorner.Parent = FeatureToggle
-
-    local isEnabled = false
-    FeatureToggle.MouseButton1Click:Connect(function()
-        isEnabled = not isEnabled
-        FeatureToggle.Text = featureName .. ": " .. (isEnabled and "ON" or "OFF")
-        FeatureToggle.BackgroundColor3 = isEnabled and Colors.DarkPink or Colors.Dark
-        getgenv()["Fatality_" .. featureName:gsub(" ", "_") .. "_Enabled"] = isEnabled
-    end)
-
-    local SettingsFrame = Instance.new("Frame")
-    SettingsFrame.Name = featureName .. "Settings"
-    SettingsFrame.Size = UDim2.new(1, 0, 0, 120)
-    SettingsFrame.BackgroundColor3 = Colors.White
-    SettingsFrame.BorderSizePixel = 0
-    SettingsFrame.LayoutOrder = 1
-    SettingsFrame.Parent = CombatContent
-
-    local SettingsCorner = Instance.new("UICorner")
-    SettingsCorner.CornerRadius = UDim.new(0, 4)
-    SettingsCorner.Parent = SettingsFrame
-
-    local SettingsLayout = Instance.new("UIListLayout")
-    SettingsLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    SettingsLayout.Padding = UDim.new(0, 2)
-    SettingsLayout.Parent = SettingsFrame
-
-    local settings = {
+local CombatFeatures = {
+    {Name = "Silent Aim", Settings = {
         {Type = "Checkbox", Name = "Raycast Head", Checked = false},
         {Type = "Checkbox", Name = "Raycast Torso", Checked = false},
         {Type = "Checkbox", Name = "Raycast Random", Checked = true},
@@ -240,25 +211,142 @@ for _, featureName in ipairs(Features) do
         {Type = "Checkbox", Name = "Visibility Check", Checked = false},
         {Type = "Slider", Name = "Distance Limit: 1000", Value = 1000},
         {Type = "Checkbox", Name = "Team Check", Checked = true}
-    }
+    }},
+    {Name = "Auto Pick", Settings = {
+        {Type = "Checkbox", Name = "Auto Pickup Weapons", Checked = true},
+        {Type = "Checkbox", Name = "Prioritize Rare", Checked = false},
+        {Type = "Slider", Name = "Pickup Range: 50", Value = 50},
+        {Type = "Checkbox", Name = "Auto Equip", Checked = true}
+    }},
+    {Name = "Fake Lag", Settings = {
+        {Type = "Slider", Name = "Lag Intensity: 0.5", Value = 0.5},
+        {Type = "Checkbox", Name = "Packet Loss Mode", Checked = false},
+        {Type = "Slider", Name = "Delay: 100ms", Value = 100},
+        {Type = "Checkbox", Name = "Jitter", Checked = true}
+    }}
+}
 
-    if featureName == "Fake Lag" then
-        settings = {
-            {Type = "Slider", Name = "Lag Intensity: 0.5", Value = 0.5},
-            {Type = "Checkbox", Name = "Packet Loss Mode", Checked = false},
-            {Type = "Slider", Name = "Delay: 100ms", Value = 100},
-            {Type = "Checkbox", Name = "Jitter", Checked = true}
-        }
-    elseif featureName == "Auto Pick" then
-        settings = {
-            {Type = "Checkbox", Name = "Auto Pickup Weapons", Checked = true},
-            {Type = "Checkbox", Name = "Prioritize Rare", Checked = false},
-            {Type = "Slider", Name = "Pickup Range: 50", Value = 50},
-            {Type = "Checkbox", Name = "Auto Equip", Checked = true}
-        }
-    end
+local VisualsFeatures = {
+    {Name = "ESP Hitbox", Settings = {
+        {Type = "Checkbox", Name = "Highlight Local Hitbox", Checked = true},
+        {Type = "Checkbox", Name = "Highlight Enemy Hitboxes", Checked = false},
+        {Type = "Slider", Name = "Highlight Color R: 255", Value = 255},
+        {Type = "Slider", Name = "Highlight Color G: 0", Value = 0},
+        {Type = "Slider", Name = "Highlight Color B: 0", Value = 0}
+    }}
+}
 
-    for _, setting in ipairs(settings) do
+local function createFeature(feature, parent)
+    local FeatureToggle = Instance.new("TextButton")
+    FeatureToggle.Name = feature.Name .. "Toggle"
+    FeatureToggle.Size = UDim2.new(1, 0, 0, 30)
+    FeatureToggle.BackgroundColor3 = Colors.Dark
+    FeatureToggle.BorderSizePixel = 0
+    FeatureToggle.Text = feature.Name .. ": OFF"
+    FeatureToggle.TextColor3 = Colors.White
+    FeatureToggle.TextScaled = true
+    FeatureToggle.Font = Enum.Font.Gotham
+    FeatureToggle.Parent = parent
+
+    local FeatureToggleCorner = Instance.new("UICorner")
+    FeatureToggleCorner.CornerRadius = UDim.new(0, 4)
+    FeatureToggleCorner.Parent = FeatureToggle
+
+    local isEnabled = false
+    FeatureToggle.MouseButton1Click:Connect(function()
+        isEnabled = not isEnabled
+        FeatureToggle.Text = feature.Name .. ": " .. (isEnabled and "ON" or "OFF")
+        FeatureToggle.BackgroundColor3 = isEnabled and Colors.DarkPink or Colors.Dark
+        getgenv()["Fatality_" .. feature.Name:gsub(" ", "_") .. "_Enabled"] = isEnabled
+    end)
+
+    local holdStart = nil
+    FeatureToggle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            holdStart = tick()
+        end
+    end)
+
+    FeatureToggle.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 and holdStart and tick() - holdStart >= 0.5 then
+            local QuickToggle = Instance.new("TextButton")
+            QuickToggle.Name = feature.Name .. "QuickToggle"
+            QuickToggle.Size = UDim2.new(0, 30, 0, 30)
+            QuickToggle.Position = UDim2.new(0, 80, 0, 20)
+            QuickToggle.BackgroundColor3 = isEnabled and Colors.DarkPink or Colors.Dark
+            QuickToggle.BorderSizePixel = 0
+            QuickToggle.Text = feature.Name:sub(1, 1)
+            QuickToggle.TextColor3 = Colors.White
+            QuickToggle.TextScaled = true
+            QuickToggle.Font = Enum.Font.Gotham
+            QuickToggle.Parent = ScreenGui
+
+            local QuickCorner = Instance.new("UICorner")
+            QuickCorner.CornerRadius = UDim.new(1, 0)
+            QuickCorner.Parent = QuickToggle
+
+            local QuickShadow = Instance.new("ImageLabel")
+            QuickShadow.Size = UDim2.new(1, 6, 1, 6)
+            QuickShadow.Position = UDim2.new(0, -3, 0, -3)
+            QuickShadow.BackgroundTransparency = 1
+            QuickShadow.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+            QuickShadow.ImageColor3 = Colors.Dark
+            QuickShadow.ImageTransparency = 0.6
+            QuickShadow.ScaleType = Enum.ScaleType.Slice
+            QuickShadow.SliceCenter = Rect.new(10, 10, 118, 118)
+            QuickShadow.Parent = QuickToggle
+
+            local quickDragging, quickDragStart, quickStartPos = false, nil, nil
+            QuickToggle.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    quickDragging = true
+                    quickDragStart = input.Position
+                    quickStartPos = QuickToggle.Position
+                end
+            end)
+
+            UserInputService.InputChanged:Connect(function(input)
+                if quickDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                    local delta = input.Position - quickDragStart
+                    QuickToggle.Position = UDim2.new(quickStartPos.X.Scale, quickStartPos.X.Offset + delta.X, quickStartPos.Y.Scale, quickStartPos.Y.Offset + delta.Y)
+                end
+            end)
+
+            UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    quickDragging = false
+                end
+            end)
+
+            QuickToggle.MouseButton1Click:Connect(function()
+                isEnabled = not isEnabled
+                FeatureToggle.Text = feature.Name .. ": " .. (isEnabled and "ON" or "OFF")
+                FeatureToggle.BackgroundColor3 = isEnabled and Colors.DarkPink or Colors.Dark
+                QuickToggle.BackgroundColor3 = isEnabled and Colors.DarkPink or Colors.Dark
+                getgenv()["Fatality_" .. feature.Name:gsub(" ", "_") .. "_Enabled"] = isEnabled
+            end)
+        end
+        holdStart = nil
+    end)
+
+    local SettingsFrame = Instance.new("Frame")
+    SettingsFrame.Name = feature.Name .. "Settings"
+    SettingsFrame.Size = UDim2.new(1, 0, 0, #feature.Settings * 22)
+    SettingsFrame.BackgroundColor3 = Colors.White
+    SettingsFrame.BorderSizePixel = 0
+    SettingsFrame.LayoutOrder = 1
+    SettingsFrame.Parent = parent
+
+    local SettingsCorner = Instance.new("UICorner")
+    SettingsCorner.CornerRadius = UDim.new(0, 4)
+    SettingsCorner.Parent = SettingsFrame
+
+    local SettingsLayout = Instance.new("UIListLayout")
+    SettingsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    SettingsLayout.Padding = UDim.new(0, 2)
+    SettingsLayout.Parent = SettingsFrame
+
+    for _, setting in ipairs(feature.Settings) do
         local SettingButton = Instance.new("TextButton")
         SettingButton.Name = setting.Name
         SettingButton.Size = UDim2.new(1, -10, 0, 20)
@@ -280,7 +368,7 @@ for _, featureName in ipairs(Features) do
             SettingButton.MouseButton1Click:Connect(function()
                 checked = not checked
                 SettingButton.Text = setting.Name .. (checked and " [ON]" or " [OFF]")
-                getgenv()["Fatality_" .. featureName:gsub(" ", "_") .. "_" .. setting.Name:gsub(" ", "_"):gsub(":", "")] = checked
+                getgenv()["Fatality_" .. feature.Name:gsub(" ", "_") .. "_" .. setting.Name:gsub(" ", "_"):gsub(":", "")] = checked
             end)
         else
             local ValueBox = Instance.new("TextBox")
@@ -301,11 +389,21 @@ for _, featureName in ipairs(Features) do
             ValueBox.FocusLost:Connect(function()
                 local val = tonumber(ValueBox.Text) or setting.Value
                 ValueBox.Text = tostring(val)
-                getgenv()["Fatality_" .. featureName:gsub(" ", "_") .. "_" .. setting.Name:gsub(" ", "_"):gsub(":", "")] = val
+                getgenv()["Fatality_" .. feature.Name:gsub(" ", "_") .. "_" .. setting.Name:gsub(" ", "_"):gsub(":", "")] = val
             end)
         end
     end
 end
+
+for _, feature in ipairs(CombatFeatures) do
+    createFeature(feature, CombatContent)
+end
+for _, feature in ipairs(VisualsFeatures) do
+    createFeature(feature, VisualsContent)
+end
+
+CombatContent.CanvasSize = UDim2.new(0, 0, 0, #CombatFeatures * 150)
+VisualsContent.CanvasSize = UDim2.new(0, 0, 0, #VisualsFeatures * 100)
 
 local firstTab = TabButtons[1]
 local firstTabButton = TabsFrame:FindFirstChild(firstTab.Name .. "Tab")
@@ -535,6 +633,83 @@ lagConnection = RunService.Heartbeat:Connect(function()
     end
 
     lastUpdate = currentTime
+end)
+
+getgenv().Fatality_ESP_Hitbox_Enabled = false
+getgenv().Fatality_ESP_Hitbox_Highlight_Local_Hitbox = true
+getgenv().Fatality_ESP_Hitbox_Highlight_Enemy_Hitboxes = false
+getgenv().Fatality_ESP_Hitbox_Highlight_Color_R = 255
+getgenv().Fatality_ESP_Hitbox_Highlight_Color_G = 0
+getgenv().Fatality_ESP_Hitbox_Highlight_Color_B = 0
+
+local highlightConnections = {}
+
+local function createHighlight(part)
+    local highlight = Instance.new("Highlight")
+    highlight.Adornee = part
+    highlight.FillColor = Color3.fromRGB(
+        getgenv().Fatality_ESP_Hitbox_Highlight_Color_R,
+        getgenv().Fatality_ESP_Hitbox_Highlight_Color_G,
+        getgenv().Fatality_ESP_Hitbox_Highlight_Color_B
+    )
+    highlight.OutlineColor = Colors.White
+    highlight.FillTransparency = 0.5
+    highlight.OutlineTransparency = 0
+    highlight.Parent = part
+    return highlight
+end
+
+RunService.Heartbeat:Connect(function()
+    if not getgenv().Fatality_ESP_Hitbox_Enabled then
+        for _, conn in pairs(highlightConnections) do
+            conn:Disconnect()
+        end
+        highlightConnections = {}
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player.Character then
+                for _, part in ipairs(player.Character:GetChildren()) do
+                    if part:IsA("BasePart") and part:FindFirstChildOfClass("Highlight") then
+                        part:FindFirstChildOfClass("Highlight"):Destroy()
+                    end
+                end
+            end
+        end
+        return
+    end
+
+    if getgenv().Fatality_ESP_Hitbox_Highlight_Local_Hitbox and LocalPlayer.Character then
+        for _, part in ipairs(LocalPlayer.Character:GetChildren()) do
+            if part:IsA("BasePart") and not part:FindFirstChildOfClass("Highlight") then
+                createHighlight(part)
+            end
+        end
+    end
+
+    if getgenv().Fatality_ESP_Hitbox_Highlight_Enemy_Hitboxes then
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                for _, part in ipairs(player.Character:GetChildren()) do
+                    if part:IsA("BasePart") and not part:FindFirstChildOfClass("Highlight") then
+                        createHighlight(part)
+                    end
+                end
+            end
+        end
+    end
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player.Character then
+            local conn = player.Character.ChildAdded:Connect(function(child)
+                if getgenv().Fatality_ESP_Hitbox_Enabled and child:IsA("BasePart") then
+                    if (player == LocalPlayer and getgenv().Fatality_ESP_Hitbox_Highlight_Local_Hitbox) or
+                       (player ~= LocalPlayer and getgenv().Fatality_ESP_Hitbox_Highlight_Enemy_Hitboxes) then
+                        createHighlight(child)
+                    end
+                end
+            end)
+            table.insert(highlightConnections, conn)
+        end
+    end
 end)
 
 spawn(function()
