@@ -243,6 +243,12 @@ local CombatFeatures = {
         {Type = "TextBox", Name = "Jitter Speed", Value = "10"},
         {Type = "TextBox", Name = "Blink Interval", Value = "0.2"},
         {Type = "TextBox", Name = "Desync Offset", Value = "2"}
+    }},
+    {Name = "Speed", Settings = {
+        {Type = "Mode", Name = "Speed Mode", Options = {"Normal", "Adaptive", "Burst"}, Selected = "Normal"},
+        {Type = "TextBox", Name = "Speed Multiplier", Value = "2"},
+        {Type = "TextBox", Name = "Burst Duration", Value = "0.5"},
+        {Type = "Checkbox", Name = "Sync with Blink", Checked = true}
     }}
 }
 
@@ -611,6 +617,12 @@ getgenv().Fatality_Anti_Aim_Jitter_Speed = 10
 getgenv().Fatality_Anti_Aim_Blink_Interval = 0.2
 getgenv().Fatality_Anti_Aim_Desync_Offset = 2
 
+getgenv().Fatality_Speed_Enabled = false
+getgenv().Fatality_Speed_Speed_Mode = "Normal"
+getgenv().Fatality_Speed_Speed_Multiplier = 2
+getgenv().Fatality_Speed_Burst_Duration = 0.5
+getgenv().Fatality_Speed_Sync_with_Blink = true
+
 getgenv().Fatality_ESP_Hitbox_Enabled = false
 getgenv().Fatality_ESP_Hitbox_Highlight_Style = "Solid"
 getgenv().Fatality_ESP_Hitbox_Highlight_Local_Hitbox = true
@@ -623,7 +635,6 @@ local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local NetworkClient = game:GetService("NetworkClient")
 
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
@@ -647,12 +658,6 @@ local function getClosestPlayer()
             local currentDistance = mode == "FOV" and (Vector2.new(screenPoint.X, screenPoint.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude or distance
             if mode == "Crosshair" then
                 currentDistance = (Vector2.new(screenPoint.X, screenPoint.Y) - Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)).Magnitude
-            elseif mode == "Priority" then
-                if player.Character.Humanoid.Health > 0 then
-                    currentDistance = player.Character.Humanoid.Health
-                else
-                    continue
-                end
             end
 
             if currentDistance < (mode == "FOV" and fovDistance or shortestDistance) then
@@ -731,7 +736,7 @@ RunService.Heartbeat:Connect(function()
     local char = LocalPlayer.Character
     if not char or not char:FindFirstChild("HumanoidRootPart") then return end
 
-    for _, obj in ipairs(Workspace:GetDescendants()) do
+    for _, obj in ipairs(Workspace:GetChildren()) do
         if obj:IsA("Tool") and obj:FindFirstChild("Handle") then
             local mode = getgenv().Fatality_Auto_Pick_Pickup_Mode
             if mode == "Weapons Only" and not obj.Name:find("Weapon") then continue end
@@ -741,13 +746,13 @@ RunService.Heartbeat:Connect(function()
             if dist < getgenv().Fatality_Auto_Pick_Pickup_Range then
                 if getgenv().Fatality_Auto_Pick_Prioritize_Rare and obj.Rarity and obj.Rarity.Value ~= "Rare" then continue end
                 if getgenv().Fatality_Auto_Pick_Auto_Pickup then
-                    local remote = obj:FindFirstChild("Remote") or obj:FindFirstChildOfClass("RemoteEvent")
+                    local remote = obj:FindFirstChildOfClass("RemoteEvent")
                     if remote then
                         remote:FireServer("Pickup")
                     else
                         obj.Handle.CFrame = char.HumanoidRootPart.CFrame
                         firetouchinterest(char.HumanoidRootPart, obj.Handle, 0)
-                        wait(0.1)
+                        wait(0.05)
                         firetouchinterest(char.HumanoidRootPart, obj.Handle, 1)
                     end
                     if getgenv().Fatality_Auto_Pick_Auto_Equip then
@@ -788,12 +793,13 @@ lagConnection = RunService.Heartbeat:Connect(function()
         if currentTime - lastUpdate >= getgenv().Fatality_Fake_Lag_Blink_Interval then
             isBlinking = not isBlinking
             lastUpdate = currentTime
-        end
-        if isBlinking then
-            if storedPosition then
-                char.HumanoidRootPart.CFrame = storedPosition
+            if not isBlinking then
+                storedPosition = char.HumanoidRootPart.CFrame
             end
-            if getgenv().Fatality_Fake_Lag_Packet_Loss_Mode and math.random() < 0.3 then
+        end
+        if isBlinking and storedPosition then
+            char.HumanoidRootPart.CFrame = storedPosition
+            if getgenv().Fatality_Fake_Lag_Packet_Loss_Mode and math.random() < 0.2 then
                 return
             end
             return
@@ -803,7 +809,7 @@ lagConnection = RunService.Heartbeat:Connect(function()
             if storedPosition then
                 char.HumanoidRootPart.CFrame = storedPosition
             end
-            if getgenv().Fatality_Fake_Lag_Packet_Loss_Mode and math.random() < 0.3 then
+            if getgenv().Fatality_Fake_Lag_Packet_Loss_Mode and math.random() < 0.2 then
                 return
             end
             return
@@ -812,7 +818,7 @@ lagConnection = RunService.Heartbeat:Connect(function()
 
     storedPosition = char.HumanoidRootPart.CFrame
     if getgenv().Fatality_Fake_Lag_Jitter then
-        char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame + Vector3.new(math.random(-1,1), 0, math.random(-1,1)) * 0.1
+        char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame + Vector3.new(math.random(-0.5, 0.5), 0, math.random(-0.5, 0.5)) * 0.1
     end
     lastUpdate = currentTime
 end)
@@ -840,25 +846,75 @@ antiAimConnection = RunService.Heartbeat:Connect(function()
         local pitch = getgenv().Fatality_Anti_Aim_Pitch_Flip and -math.pi/2 or math.pi/2
         char.HumanoidRootPart.CFrame = CFrame.new(char.HumanoidRootPart.Position) * CFrame.Angles(pitch, yaw, 0)
     elseif mode == "Jitter" then
-        local offset = math.sin(currentTime * getgenv().Fatality_Anti_Aim_Jitter_Speed) * math.rad(45)
+        local offset = math.sin(currentTime * getgenv().Fatality_Anti_Aim_Jitter_Speed) * math.rad(30)
         char.HumanoidRootPart.CFrame = CFrame.new(char.HumanoidRootPart.Position) * CFrame.Angles(0, offset, 0)
     elseif mode == "Spin" then
         local yaw = (currentTime * getgenv().Fatality_Anti_Aim_Jitter_Speed) % (2 * math.pi)
         char.HumanoidRootPart.CFrame = CFrame.new(char.HumanoidRootPart.Position) * CFrame.Angles(0, yaw, 0)
     elseif mode == "Blink" then
         if currentTime - antiLastUpdate >= getgenv().Fatality_Anti_Aim_Blink_Interval then
-            char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame + Vector3.new(math.random(-2,2), math.random(-1,1), math.random(-2,2))
+            char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame + Vector3.new(math.random(-1, 1), math.random(-0.5, 0.5), math.random(-1, 1))
             antiLastUpdate = currentTime
         end
     elseif mode == "Desync Offset" then
-        local offset = Vector3.new(getgenv().Fatality_Anti_Aim_Desync_Offset * (math.random(0,1) == 0 and 1 or -1), 0, 0)
+        local offset = Vector3.new(getgenv().Fatality_Anti_Aim_Desync_Offset * (math.random(0, 1) == 0 and 1 or -1), 0, 0)
         char.HumanoidRootPart.CFrame = CFrame.new(char.HumanoidRootPart.Position + offset)
+    end
+end)
+
+local speedConnection
+local speedLastUpdate = tick()
+local baseWalkSpeed = 16
+
+if speedConnection then speedConnection:Disconnect() end
+
+speedConnection = RunService.Heartbeat:Connect(function()
+    if not getgenv().Fatality_Speed_Enabled then
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = baseWalkSpeed
+        end
+        return
+    end
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") or not char:FindFirstChild("Humanoid") then return end
+
+    local currentTime = tick()
+    local mode = getgenv().Fatality_Speed_Speed_Mode
+    local multiplier = getgenv().Fatality_Speed_Speed_Multiplier
+    local humanoid = char.Humanoid
+
+    if mode == "Normal" then
+        humanoid.WalkSpeed = baseWalkSpeed * multiplier
+    elseif mode == "Adaptive" then
+        local moveDir = humanoid.MoveDirection.Magnitude
+        humanoid.WalkSpeed = baseWalkSpeed * (1 + (moveDir > 0 and multiplier or 0))
+    elseif mode == "Burst" then
+        if getgenv().Fatality_Speed_Sync_with_Blink and getgenv().Fatality_Fake_Lag_Enabled and getgenv().Fatality_Fake_Lag_Lag_Mode == "Blink" then
+            if isBlinking then
+                humanoid.WalkSpeed = baseWalkSpeed
+            else
+                humanoid.WalkSpeed = baseWalkSpeed * multiplier
+            end
+        else
+            if currentTime - speedLastUpdate >= getgenv().Fatality_Speed_Burst_Duration then
+                humanoid.WalkSpeed = baseWalkSpeed * multiplier
+                speedLastUpdate = currentTime
+            else
+                humanoid.WalkSpeed = baseWalkSpeed
+            end
+        end
+    end
+
+    if multiplier > 1 then
+        local moveDir = humanoid.MoveDirection * multiplier
+        char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame + moveDir * 0.1
     end
 end)
 
 local highlightConnections = {}
 
 local function createHighlight(part)
+    if part:FindFirstChildOfClass("Highlight") then return end
     local highlight = Instance.new("Highlight")
     highlight.Adornee = part
     highlight.FillColor = Color3.fromRGB(
@@ -894,7 +950,7 @@ RunService.Heartbeat:Connect(function()
 
     if getgenv().Fatality_ESP_Hitbox_Highlight_Local_Hitbox and LocalPlayer.Character then
         for _, part in ipairs(LocalPlayer.Character:GetChildren()) do
-            if part:IsA("BasePart") and not part:FindFirstChildOfClass("Highlight") then
+            if part:IsA("BasePart") then
                 createHighlight(part)
             end
         end
@@ -904,7 +960,7 @@ RunService.Heartbeat:Connect(function()
         for _, player in ipairs(Players:GetPlayers()) do
             if player ~= LocalPlayer and player.Character then
                 for _, part in ipairs(player.Character:GetChildren()) do
-                    if part:IsA("BasePart") and not part:FindFirstChildOfClass("Highlight") then
+                    if part:IsA("BasePart") then
                         createHighlight(part)
                     end
                 end
@@ -913,7 +969,7 @@ RunService.Heartbeat:Connect(function()
     end
 
     for _, player in ipairs(Players:GetPlayers()) do
-        if player.Character then
+        if player.Character and not highlightConnections[player] then
             local conn = player.Character.ChildAdded:Connect(function(child)
                 if getgenv().Fatality_ESP_Hitbox_Enabled and child:IsA("BasePart") then
                     if (player == LocalPlayer and getgenv().Fatality_ESP_Hitbox_Highlight_Local_Hitbox) or
@@ -922,7 +978,7 @@ RunService.Heartbeat:Connect(function()
                     end
                 end
             end)
-            table.insert(highlightConnections, conn)
+            highlightConnections[player] = conn
         end
     end
 end)
