@@ -208,42 +208,52 @@ createTabContent("Settings")
 
 local CombatFeatures = {
     {Name = "Silent Aim", Settings = {
-        {Type = "Mode", Name = "Aim Mode", Options = {"Closest", "FOV", "Priority"}, Selected = "Closest"},
-        {Type = "Checkbox", Name = "Raycast Head", Checked = false},
+        {Type = "Mode", Name = "Aim Mode", Options = {"Closest", "FOV", "Crosshair", "Headshot Only"}, Selected = "Closest"},
+        {Type = "Checkbox", Name = "Raycast Head", Checked = true},
         {Type = "Checkbox", Name = "Raycast Torso", Checked = false},
-        {Type = "Checkbox", Name = "Raycast Random", Checked = true},
-        {Type = "Slider", Name = "FOV", Value = 90, Min = 10, Max = 180},
-        {Type = "Slider", Name = "Smoothness", Value = 0.1, Min = 0, Max = 1},
-        {Type = "Slider", Name = "Hit Chance", Value = 100, Min = 0, Max = 100},
+        {Type = "Checkbox", Name = "Raycast Random", Checked = false},
+        {Type = "TextBox", Name = "FOV", Value = "90"},
+        {Type = "TextBox", Name = "Smoothness", Value = "0.1"},
+        {Type = "TextBox", Name = "Hit Chance", Value = "100"},
         {Type = "Checkbox", Name = "Prediction", Checked = true},
         {Type = "Checkbox", Name = "Visibility Check", Checked = false},
-        {Type = "Slider", Name = "Distance Limit", Value = 1000, Min = 50, Max = 5000},
-        {Type = "Checkbox", Name = "Team Check", Checked = true}
+        {Type = "TextBox", Name = "Distance Limit", Value = "1000"},
+        {Type = "Checkbox", Name = "Team Check", Checked = true},
+        {Type = "Mode", Name = "Legit Mode", Options = {"Off", "Smooth", "Random Miss"}, Selected = "Off"}
     }},
     {Name = "Auto Pick", Settings = {
-        {Type = "Mode", Name = "Pickup Mode", Options = {"All", "Weapons Only", "Rare Only"}, Selected = "All"},
+        {Type = "Mode", Name = "Pickup Mode", Options = {"All", "Weapons Only", "Rare Only", "Ammo Only"}, Selected = "All"},
         {Type = "Checkbox", Name = "Auto Pickup", Checked = true},
         {Type = "Checkbox", Name = "Prioritize Rare", Checked = false},
-        {Type = "Slider", Name = "Pickup Range", Value = 50, Min = 10, Max = 100},
+        {Type = "TextBox", Name = "Pickup Range", Value = "50"},
         {Type = "Checkbox", Name = "Auto Equip", Checked = true}
     }},
     {Name = "Fake Lag", Settings = {
-        {Type = "Mode", Name = "Lag Mode", Options = {"Constant", "Random", "Adaptive"}, Selected = "Constant"},
-        {Type = "Slider", Name = "Lag Intensity", Value = 0.5, Min = 0.1, Max = 1},
+        {Type = "Mode", Name = "Lag Mode", Options = {"Constant", "Random", "Blink"}, Selected = "Constant"},
+        {Type = "TextBox", Name = "Lag Intensity", Value = "0.5"},
         {Type = "Checkbox", Name = "Packet Loss Mode", Checked = false},
-        {Type = "Slider", Name = "Delay", Value = 100, Min = 50, Max = 500},
+        {Type = "TextBox", Name = "Delay", Value = "100"},
+        {Type = "TextBox", Name = "Blink Interval", Value = "1.5"},
         {Type = "Checkbox", Name = "Jitter", Checked = true}
+    }},
+    {Name = "Anti Aim", Settings = {
+        {Type = "Mode", Name = "Anti Mode", Options = {"Static", "Jitter", "Spin", "Blink", "Desync Offset"}, Selected = "Static"},
+        {Type = "TextBox", Name = "Yaw Offset", Value = "180"},
+        {Type = "Checkbox", Name = "Pitch Flip", Checked = true},
+        {Type = "TextBox", Name = "Jitter Speed", Value = "10"},
+        {Type = "TextBox", Name = "Blink Interval", Value = "0.2"},
+        {Type = "TextBox", Name = "Desync Offset", Value = "2"}
     }}
 }
 
 local VisualsFeatures = {
     {Name = "ESP Hitbox", Settings = {
-        {Type = "Mode", Name = "Highlight Style", Options = {"Solid", "Outline", "Glow"}, Selected = "Solid"},
+        {Type = "Mode", Name = "Highlight Style", Options = {"Solid", "Outline", "Glow", "Wireframe"}, Selected = "Solid"},
         {Type = "Checkbox", Name = "Highlight Local Hitbox", Checked = true},
         {Type = "Checkbox", Name = "Highlight Enemy Hitboxes", Checked = false},
-        {Type = "Slider", Name = "Highlight Color R", Value = 255, Min = 0, Max = 255},
-        {Type = "Slider", Name = "Highlight Color G", Value = 0, Min = 0, Max = 255},
-        {Type = "Slider", Name = "Highlight Color B", Value = 0, Min = 0, Max = 255}
+        {Type = "TextBox", Name = "Highlight Color R", Value = "255"},
+        {Type = "TextBox", Name = "Highlight Color G", Value = "0"},
+        {Type = "TextBox", Name = "Highlight Color B", Value = "0"}
     }}
 }
 
@@ -391,79 +401,41 @@ local function createFeature(feature, parent)
                 SettingButton.Text = setting.Name .. (checked and " [ON]" or " [OFF]")
                 getgenv()["Fatality_" .. feature.Name:gsub(" ", "_") .. "_" .. setting.Name:gsub(" ", "_"):gsub(":", "")] = checked
             end)
-        elseif setting.Type == "Slider" then
-            local SliderFrame = Instance.new("Frame")
-            SliderFrame.Name = setting.Name
-            SliderFrame.Size = UDim2.new(1, -10, 0, 20)
-            SliderFrame.BackgroundColor3 = Colors.Dark
-            SliderFrame.BorderSizePixel = 0
-            SliderFrame.Parent = SettingsFrame
+        elseif setting.Type == "TextBox" then
+            local SettingButton = Instance.new("TextButton")
+            SettingButton.Name = setting.Name
+            SettingButton.Size = UDim2.new(1, -10, 0, 20)
+            SettingButton.BackgroundColor3 = Colors.Dark
+            SettingButton.BorderSizePixel = 0
+            SettingButton.Text = setting.Name
+            SettingButton.TextColor3 = Colors.Red
+            SettingButton.TextScaled = true
+            SettingButton.Font = Enum.Font.Gotham
+            SettingButton.Parent = SettingsFrame
 
-            local SliderCorner = Instance.new("UICorner")
-            SliderCorner.CornerRadius = UDim.new(0, 2)
-            SliderCorner.Parent = SliderFrame
+            local SettingCorner = Instance.new("UICorner")
+            SettingCorner.CornerRadius = UDim.new(0, 2)
+            SettingCorner.Parent = SettingButton
 
-            local SliderLabel = Instance.new("TextLabel")
-            SliderLabel.Size = UDim2.new(0.5, 0, 1, 0)
-            SliderLabel.BackgroundTransparency = 1
-            SliderLabel.Text = setting.Name .. ": " .. setting.Value
-            SliderLabel.TextColor3 = Colors.Red
-            SliderLabel.TextScaled = true
-            SliderLabel.Font = Enum.Font.Gotham
-            SliderLabel.Parent = SliderFrame
+            local ValueBox = Instance.new("TextBox")
+            ValueBox.Size = UDim2.new(0, 60, 1, 0)
+            ValueBox.Position = UDim2.new(1, -70, 0, 0)
+            ValueBox.BackgroundColor3 = Colors.DarkPink
+            ValueBox.BorderSizePixel = 0
+            ValueBox.Text = tostring(setting.Value)
+            ValueBox.TextColor3 = Colors.White
+            ValueBox.TextScaled = true
+            ValueBox.Font = Enum.Font.Gotham
+            ValueBox.Parent = SettingButton
 
-            local SliderTrack = Instance.new("Frame")
-            SliderTrack.Size = UDim2.new(0.5, -10, 0, 4)
-            SliderTrack.Position = UDim2.new(0.5, 5, 0.5, -2)
-            SliderTrack.BackgroundColor3 = Colors.White
-            SliderTrack.BorderSizePixel = 0
-            SliderTrack.Parent = SliderFrame
+            local ValueCorner = Instance.new("UICorner")
+            ValueCorner.CornerRadius = UDim.new(0, 2)
+            ValueCorner.Parent = ValueBox
 
-            local SliderTrackCorner = Instance.new("UICorner")
-            SliderTrackCorner.CornerRadius = UDim.new(0, 2)
-            SliderTrackCorner.Parent = SliderTrack
-
-            local SliderFill = Instance.new("Frame")
-            SliderFill.Size = UDim2.new((setting.Value - setting.Min) / (setting.Max - setting.Min), 0, 1, 0)
-            SliderFill.BackgroundColor3 = Colors.DarkPink
-            SliderFill.BorderSizePixel = 0
-            SliderFill.Parent = SliderTrack
-
-            local SliderFillCorner = Instance.new("UICorner")
-            SliderFillCorner.CornerRadius = UDim.new(0, 2)
-            SliderFillCorner.Parent = SliderFill
-
-            local SliderButton = Instance.new("TextButton")
-            SliderButton.Size = UDim2.new(1, 0, 1, 0)
-            SliderButton.BackgroundTransparency = 1
-            SliderButton.Text = ""
-            SliderButton.Parent = SliderTrack
-
-            local draggingSlider = false
-            SliderButton.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    draggingSlider = true
-                end
-            end)
-
-            UserInputService.InputChanged:Connect(function(input)
-                if draggingSlider and input.UserInputType == Enum.UserInputType.MouseMovement then
-                    local mouseX = input.Position.X
-                    local trackX = SliderTrack.AbsolutePosition.X
-                    local trackWidth = SliderTrack.AbsoluteSize.X
-                    local relative = math.clamp((mouseX - trackX) / trackWidth, 0, 1)
-                    local value = setting.Min + (setting.Max - setting.Min) * relative
-                    value = math.round(value * 10) / 10
-                    SliderFill.Size = UDim2.new(relative, 0, 1, 0)
-                    SliderLabel.Text = setting.Name .. ": " .. value
-                    getgenv()["Fatality_" .. feature.Name:gsub(" ", "_") .. "_" .. setting.Name:gsub(" ", "_"):gsub(":", "")] = value
-                end
-            end)
-
-            UserInputService.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    draggingSlider = false
-                end
+            ValueBox.FocusLost:Connect(function()
+                local val = tonumber(ValueBox.Text) or setting.Value
+                ValueBox.Text = tostring(val)
+                getgenv()["Fatality_" .. feature.Name:gsub(" ", "_") .. "_" .. setting.Name:gsub(" ", "_"):gsub(":", "")] = val
             end)
         elseif setting.Type == "Mode" then
             local ModeFrame = Instance.new("Frame")
@@ -604,9 +576,9 @@ setreadonly(mt, false)
 
 getgenv().Fatality_Silent_Aim_Enabled = false
 getgenv().Fatality_Silent_Aim_Aim_Mode = "Closest"
-getgenv().Fatality_Silent_Aim_Raycast_Head = false
+getgenv().Fatality_Silent_Aim_Raycast_Head = true
 getgenv().Fatality_Silent_Aim_Raycast_Torso = false
-getgenv().Fatality_Silent_Aim_Raycast_Random = true
+getgenv().Fatality_Silent_Aim_Raycast_Random = false
 getgenv().Fatality_Silent_Aim_FOV = 90
 getgenv().Fatality_Silent_Aim_Smoothness = 0.1
 getgenv().Fatality_Silent_Aim_Hit_Chance = 100
@@ -614,6 +586,38 @@ getgenv().Fatality_Silent_Aim_Prediction = true
 getgenv().Fatality_Silent_Aim_Visibility_Check = false
 getgenv().Fatality_Silent_Aim_Distance_Limit = 1000
 getgenv().Fatality_Silent_Aim_Team_Check = true
+getgenv().Fatality_Silent_Aim_Legit_Mode = "Off"
+
+getgenv().Fatality_Auto_Pick_Enabled = false
+getgenv().Fatality_Auto_Pick_Pickup_Mode = "All"
+getgenv().Fatality_Auto_Pick_Auto_Pickup = true
+getgenv().Fatality_Auto_Pick_Prioritize_Rare = false
+getgenv().Fatality_Auto_Pick_Pickup_Range = 50
+getgenv().Fatality_Auto_Pick_Auto_Equip = true
+
+getgenv().Fatality_Fake_Lag_Enabled = false
+getgenv().Fatality_Fake_Lag_Lag_Mode = "Constant"
+getgenv().Fatality_Fake_Lag_Lag_Intensity = 0.5
+getgenv().Fatality_Fake_Lag_Packet_Loss_Mode = false
+getgenv().Fatality_Fake_Lag_Delay = 100
+getgenv().Fatality_Fake_Lag_Blink_Interval = 1.5
+getgenv().Fatality_Fake_Lag_Jitter = true
+
+getgenv().Fatality_Anti_Aim_Enabled = false
+getgenv().Fatality_Anti_Aim_Anti_Mode = "Static"
+getgenv().Fatality_Anti_Aim_Yaw_Offset = 180
+getgenv().Fatality_Anti_Aim_Pitch_Flip = true
+getgenv().Fatality_Anti_Aim_Jitter_Speed = 10
+getgenv().Fatality_Anti_Aim_Blink_Interval = 0.2
+getgenv().Fatality_Anti_Aim_Desync_Offset = 2
+
+getgenv().Fatality_ESP_Hitbox_Enabled = false
+getgenv().Fatality_ESP_Hitbox_Highlight_Style = "Solid"
+getgenv().Fatality_ESP_Hitbox_Highlight_Local_Hitbox = true
+getgenv().Fatality_ESP_Hitbox_Highlight_Enemy_Hitboxes = false
+getgenv().Fatality_ESP_Hitbox_Highlight_Color_R = 255
+getgenv().Fatality_ESP_Hitbox_Highlight_Color_G = 0
+getgenv().Fatality_ESP_Hitbox_Highlight_Color_B = 0
 
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
@@ -641,8 +645,9 @@ local function getClosestPlayer()
 
             local mode = getgenv().Fatality_Silent_Aim_Aim_Mode
             local currentDistance = mode == "FOV" and (Vector2.new(screenPoint.X, screenPoint.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude or distance
-
-            if mode == "Priority" then
+            if mode == "Crosshair" then
+                currentDistance = (Vector2.new(screenPoint.X, screenPoint.Y) - Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)).Magnitude
+            elseif mode == "Priority" then
                 if player.Character.Humanoid.Health > 0 then
                     currentDistance = player.Character.Humanoid.Health
                 else
@@ -677,12 +682,16 @@ end
 local function getTargetPart(player)
     local char = player.Character
     if not char then return nil end
+    if getgenv().Fatality_Silent_Aim_Aim_Mode == "Headshot Only" then
+        return char:FindFirstChild("Head")
+    end
 
-    local parts = {"Head"}
+    local parts = {}
+    if getgenv().Fatality_Silent_Aim_Raycast_Head then table.insert(parts, "Head") end
     if getgenv().Fatality_Silent_Aim_Raycast_Torso then table.insert(parts, "Torso") end
     if getgenv().Fatality_Silent_Aim_Raycast_Random then parts = {"Head", "Torso", "HumanoidRootPart"} end
 
-    local part = parts[math.random(1, #parts)]
+    local part = parts[math.random(1, #parts)] or "Head"
     return char:FindFirstChild(part)
 end
 
@@ -692,18 +701,23 @@ mt.__namecall = newcclosure(function(self, ...)
 
     if getgenv().Fatality_Silent_Aim_Enabled and method == "FireServer" and (self.Name:find("Fire") or self.Name:find("Shoot")) then
         local hitChance = getgenv().Fatality_Silent_Aim_Hit_Chance / 100
-        if math.random() > hitChance then return oldNamecall(self, ...) end
+        if getgenv().Fatality_Silent_Aim_Legit_Mode == "Random Miss" and math.random() > hitChance then
+            return oldNamecall(self, ...)
+        end
 
         local closest = getClosestPlayer()
         if closest and getTargetPart(closest) then
             local targetPart = getTargetPart(closest)
+            local targetPos = targetPart.Position
             if getgenv().Fatality_Silent_Aim_Prediction then
                 local velocity = closest.Character.HumanoidRootPart.Velocity
-                local predictedPos = targetPart.Position + (velocity * getgenv().Fatality_Silent_Aim_Smoothness)
-                args[1] = predictedPos
-            else
-                args[1] = targetPart.Position
+                targetPos = targetPos + (velocity * getgenv().Fatality_Silent_Aim_Smoothness)
             end
+            if getgenv().Fatality_Silent_Aim_Legit_Mode == "Smooth" then
+                local currentPos = args[1] or Camera.CFrame.Position
+                targetPos = currentPos + (targetPos - currentPos) * getgenv().Fatality_Silent_Aim_Smoothness
+            end
+            args[1] = targetPos
         end
     end
 
@@ -711,13 +725,6 @@ mt.__namecall = newcclosure(function(self, ...)
 end)
 
 setreadonly(mt, true)
-
-getgenv().Fatality_Auto_Pick_Enabled = false
-getgenv().Fatality_Auto_Pick_Pickup_Mode = "All"
-getgenv().Fatality_Auto_Pick_Auto_Pickup = true
-getgenv().Fatality_Auto_Pick_Prioritize_Rare = false
-getgenv().Fatality_Auto_Pick_Pickup_Range = 50
-getgenv().Fatality_Auto_Pick_Auto_Equip = true
 
 RunService.Heartbeat:Connect(function()
     if not getgenv().Fatality_Auto_Pick_Enabled then return end
@@ -729,6 +736,7 @@ RunService.Heartbeat:Connect(function()
             local mode = getgenv().Fatality_Auto_Pick_Pickup_Mode
             if mode == "Weapons Only" and not obj.Name:find("Weapon") then continue end
             if mode == "Rare Only" and (not obj:FindFirstChild("Rarity") or obj.Rarity.Value ~= "Rare") then continue end
+            if mode == "Ammo Only" and not obj.Name:find("Ammo") then continue end
             local dist = (char.HumanoidRootPart.Position - obj.Handle.Position).Magnitude
             if dist < getgenv().Fatality_Auto_Pick_Pickup_Range then
                 if getgenv().Fatality_Auto_Pick_Prioritize_Rare and obj.Rarity and obj.Rarity.Value ~= "Rare" then continue end
@@ -754,22 +762,17 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
-getgenv().Fatality_Fake_Lag_Enabled = false
-getgenv().Fatality_Fake_Lag_Lag_Mode = "Constant"
-getgenv().Fatality_Fake_Lag_Lag_Intensity = 0.5
-getgenv().Fatality_Fake_Lag_Packet_Loss_Mode = false
-getgenv().Fatality_Fake_Lag_Delay = 100
-getgenv().Fatality_Fake_Lag_Jitter = true
-
 local lagConnection
 local lastUpdate = tick()
 local storedPosition = nil
+local isBlinking = false
 
 if lagConnection then lagConnection:Disconnect() end
 
 lagConnection = RunService.Heartbeat:Connect(function()
     if not getgenv().Fatality_Fake_Lag_Enabled then
         storedPosition = nil
+        isBlinking = false
         return
     end
     local char = LocalPlayer.Character
@@ -781,18 +784,30 @@ lagConnection = RunService.Heartbeat:Connect(function()
 
     if mode == "Random" then
         delay = delay * math.random(0.5, 1.5)
-    elseif mode == "Adaptive" then
-        delay = delay * (1 + (LocalPlayer.Character.Humanoid.MoveDirection.Magnitude > 0 and 0.5 or 0))
-    end
-
-    if currentTime - lastUpdate < delay * getgenv().Fatality_Fake_Lag_Lag_Intensity then
-        if storedPosition then
-            char.HumanoidRootPart.CFrame = storedPosition
+    elseif mode == "Blink" then
+        if currentTime - lastUpdate >= getgenv().Fatality_Fake_Lag_Blink_Interval then
+            isBlinking = not isBlinking
+            lastUpdate = currentTime
         end
-        if getgenv().Fatality_Fake_Lag_Packet_Loss_Mode and math.random() < 0.3 then
+        if isBlinking then
+            if storedPosition then
+                char.HumanoidRootPart.CFrame = storedPosition
+            end
+            if getgenv().Fatality_Fake_Lag_Packet_Loss_Mode and math.random() < 0.3 then
+                return
+            end
             return
         end
-        return
+    elseif mode == "Constant" then
+        if currentTime - lastUpdate < delay * getgenv().Fatality_Fake_Lag_Lag_Intensity then
+            if storedPosition then
+                char.HumanoidRootPart.CFrame = storedPosition
+            end
+            if getgenv().Fatality_Fake_Lag_Packet_Loss_Mode and math.random() < 0.3 then
+                return
+            end
+            return
+        end
     end
 
     storedPosition = char.HumanoidRootPart.CFrame
@@ -802,13 +817,44 @@ lagConnection = RunService.Heartbeat:Connect(function()
     lastUpdate = currentTime
 end)
 
-getgenv().Fatality_ESP_Hitbox_Enabled = false
-getgenv().Fatality_ESP_Hitbox_Highlight_Style = "Solid"
-getgenv().Fatality_ESP_Hitbox_Highlight_Local_Hitbox = true
-getgenv().Fatality_ESP_Hitbox_Highlight_Enemy_Hitboxes = false
-getgenv().Fatality_ESP_Hitbox_Highlight_Color_R = 255
-getgenv().Fatality_ESP_Hitbox_Highlight_Color_G = 0
-getgenv().Fatality_ESP_Hitbox_Highlight_Color_B = 0
+local antiAimConnection
+local antiLastUpdate = tick()
+local antiStoredPosition = nil
+
+if antiAimConnection then antiAimConnection:Disconnect() end
+
+antiAimConnection = RunService.Heartbeat:Connect(function()
+    if not getgenv().Fatality_Anti_Aim_Enabled then
+        antiStoredPosition = nil
+        return
+    end
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+
+    local currentTime = tick()
+    local mode = getgenv().Fatality_Anti_Aim_Anti_Mode
+    antiStoredPosition = char.HumanoidRootPart.CFrame
+
+    if mode == "Static" then
+        local yaw = math.rad(getgenv().Fatality_Anti_Aim_Yaw_Offset)
+        local pitch = getgenv().Fatality_Anti_Aim_Pitch_Flip and -math.pi/2 or math.pi/2
+        char.HumanoidRootPart.CFrame = CFrame.new(char.HumanoidRootPart.Position) * CFrame.Angles(pitch, yaw, 0)
+    elseif mode == "Jitter" then
+        local offset = math.sin(currentTime * getgenv().Fatality_Anti_Aim_Jitter_Speed) * math.rad(45)
+        char.HumanoidRootPart.CFrame = CFrame.new(char.HumanoidRootPart.Position) * CFrame.Angles(0, offset, 0)
+    elseif mode == "Spin" then
+        local yaw = (currentTime * getgenv().Fatality_Anti_Aim_Jitter_Speed) % (2 * math.pi)
+        char.HumanoidRootPart.CFrame = CFrame.new(char.HumanoidRootPart.Position) * CFrame.Angles(0, yaw, 0)
+    elseif mode == "Blink" then
+        if currentTime - antiLastUpdate >= getgenv().Fatality_Anti_Aim_Blink_Interval then
+            char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame + Vector3.new(math.random(-2,2), math.random(-1,1), math.random(-2,2))
+            antiLastUpdate = currentTime
+        end
+    elseif mode == "Desync Offset" then
+        local offset = Vector3.new(getgenv().Fatality_Anti_Aim_Desync_Offset * (math.random(0,1) == 0 and 1 or -1), 0, 0)
+        char.HumanoidRootPart.CFrame = CFrame.new(char.HumanoidRootPart.Position + offset)
+    end
+end)
 
 local highlightConnections = {}
 
@@ -822,8 +868,8 @@ local function createHighlight(part)
     )
     highlight.OutlineColor = Colors.White
     local style = getgenv().Fatality_ESP_Hitbox_Highlight_Style
-    highlight.FillTransparency = style == "Solid" and 0.5 or (style == "Outline" and 1 or 0.3)
-    highlight.OutlineTransparency = style == "Outline" and 0 or 0.5
+    highlight.FillTransparency = style == "Solid" and 0.5 or (style == "Outline" and 1 or (style == "Glow" and 0.3 or 0.7))
+    highlight.OutlineTransparency = style == "Outline" or style == "Wireframe" and 0 or 0.5
     highlight.Parent = part
     return highlight
 end
