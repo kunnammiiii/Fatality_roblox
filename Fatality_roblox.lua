@@ -22,7 +22,7 @@ ScreenGui.Parent = CoreGui
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Name = "ToggleButton"
 ToggleButton.Size = UDim2.new(0, 50, 0, 50)
-ToggleButton.Position = UDim2.new(0, 20, 0, 20)
+ToggleButton.Position = UDim2.new(1, -70, 1, -70)
 ToggleButton.BackgroundColor3 = Colors.DarkPink
 ToggleButton.BorderSizePixel = 0
 ToggleButton.Text = "F"
@@ -49,8 +49,8 @@ ToggleShadow.Parent = ToggleButton
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 400, 0, 300)
-MainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
+MainFrame.Size = UDim2.new(0, 350, 0, 250)
+MainFrame.Position = UDim2.new(0.5, -175, 0.5, -125)
 MainFrame.BackgroundColor3 = Colors.Red
 MainFrame.BorderSizePixel = 0
 MainFrame.Visible = false
@@ -85,8 +85,8 @@ TopCorner.Parent = TopBar
 
 local LogoLabel = Instance.new("TextLabel")
 LogoLabel.Name = "Logo"
-LogoLabel.Size = UDim2.new(0, 40, 0, 40)
-LogoLabel.Position = UDim2.new(0, 10, 0, 5)
+LogoLabel.Size = UDim2.new(0, 50, 0, 50)
+LogoLabel.Position = UDim2.new(0, 10, 0, 0)
 LogoLabel.BackgroundTransparency = 1
 LogoLabel.Text = "F"
 LogoLabel.TextColor3 = Colors.DarkPink
@@ -227,28 +227,6 @@ local CombatFeatures = {
         {Type = "TextBox", Name = "Pickup Range", Value = "50"},
         {Type = "Checkbox", Name = "Auto Equip", Checked = true},
         {Type = "TextBox", Name = "Wall Peek Sensitivity", Value = "5"}
-    }},
-    {Name = "Fake Lag", Settings = {
-        {Type = "Mode", Name = "Lag Mode", Options = {"Constant", "Random", "Blink", "Adaptive", "Pulse", "Jitter Only"}, Selected = "Constant"},
-        {Type = "TextBox", Name = "Lag Intensity", Value = "0.5"},
-        {Type = "Checkbox", Name = "Packet Loss Mode", Checked = false},
-        {Type = "TextBox", Name = "Delay", Value = "100"},
-        {Type = "TextBox", Name = "Blink Interval", Value = "1.5"},
-        {Type = "Checkbox", Name = "Jitter", Checked = true}
-    }},
-    {Name = "Anti Aim", Settings = {
-        {Type = "Mode", Name = "Anti Mode", Options = {"Static", "Jitter", "Spin", "Blink", "Desync Offset", "Random Mix"}, Selected = "Static"},
-        {Type = "TextBox", Name = "Yaw Offset", Value = "180"},
-        {Type = "Checkbox", Name = "Pitch Flip", Checked = true},
-        {Type = "TextBox", Name = "Jitter Speed", Value = "10"},
-        {Type = "TextBox", Name = "Blink Interval", Value = "0.2"},
-        {Type = "TextBox", Name = "Desync Offset", Value = "2"}
-    }},
-    {Name = "Speed", Settings = {
-        {Type = "Mode", Name = "Speed Mode", Options = {"Normal", "Adaptive", "Burst", "Strafe", "Bunny Hop", "Teleport"}, Selected = "Normal"},
-        {Type = "TextBox", Name = "Speed Multiplier", Value = "2"},
-        {Type = "TextBox", Name = "Burst Duration", Value = "0.5"},
-        {Type = "Checkbox", Name = "Sync with Blink", Checked = true}
     }}
 }
 
@@ -273,6 +251,24 @@ local VisualsFeatures = {
         {Type = "TextBox", Name = "Duration", Value = "1"},
         {Type = "TextBox", Name = "Glow Intensity", Value = "0.5"},
         {Type = "TextBox", Name = "Notification Size", Value = "16"}
+    }},
+    {Name = "Hit Particles", Settings = {
+        {Type = "Checkbox", Name = "Enable Particles", Checked = false},
+        {Type = "TextBox", Name = "Particle Size", Value = "1"},
+        {Type = "TextBox", Name = "Particle Color R", Value = "255"},
+        {Type = "TextBox", Name = "Particle Color G", Value = "0"},
+        {Type = "TextBox", Name = "Particle Color B", Value = "0"}
+    }},
+    {Name = "Kill Effect", Settings = {
+        {Type = "Checkbox", Name = "Enable Kill Effect", Checked = false},
+        {Type = "TextBox", Name = "Effect Intensity", Value = "1"}
+    }}
+}
+
+local MiscFeatures = {
+    {Name = "Shift Lock", Settings = {
+        {Type = "Checkbox", Name = "Enable Shift Lock", Checked = false},
+        {Type = "TextBox", Name = "Shift Speed", Value = "5"}
     }}
 }
 
@@ -341,7 +337,9 @@ local function createFeature(feature, parent)
                 QuickShadow.SliceCenter = Rect.new(10, 10, 118, 118)
                 QuickShadow.Parent = QuickToggle
 
-                local quickDragging, quickDragStart, quickStartPos = false, nil, nil
+                local quickDragging = false
+                local quickDragStart = nil
+                local quickStartPos = nil
                 QuickToggle.InputBegan:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseButton1 then
                         quickDragging = true
@@ -509,6 +507,9 @@ end
 for _, feature in ipairs(VisualsFeatures) do
     createFeature(feature, VisualsContent)
 end
+for _, feature in ipairs(MiscFeatures) do
+    createFeature(feature, createTabContent("Misc"))
+end
 
 local firstTab = TabButtons[1]
 local firstTabButton = TabsFrame:FindFirstChild(firstTab.Name .. "Tab")
@@ -526,8 +527,8 @@ local function openMenu()
     MainFrame.Size = UDim2.new(0, 0, 0, 0)
     MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
     TweenService:Create(MainFrame, openTween, {
-        Size = UDim2.new(0, 400, 0, 300),
-        Position = UDim2.new(0.5, -200, 0.5, -150)
+        Size = UDim2.new(0, 350, 0, 250),
+        Position = UDim2.new(0.5, -175, 0.5, -125)
     }):Play()
 end
 
@@ -614,49 +615,6 @@ getgenv().Fatality_Auto_Pick_Pickup_Range = 50
 getgenv().Fatality_Auto_Pick_Auto_Equip = true
 getgenv().Fatality_Auto_Pick_Wall_Peek_Sensitivity = 5
 
-getgenv().Fatality_Fake_Lag_Enabled = false
-getgenv().Fatality_Fake_Lag_Lag_Mode = "Constant"
-getgenv().Fatality_Fake_Lag_Lag_Intensity = 0.5
-getgenv().Fatality_Fake_Lag_Packet_Loss_Mode = false
-getgenv().Fatality_Fake_Lag_Delay = 100
-getgenv().Fatality_Fake_Lag_Blink_Interval = 1.5
-getgenv().Fatality_Fake_Lag_Jitter = true
-
-getgenv().Fatality_Anti_Aim_Enabled = false
-getgenv().Fatality_Anti_Aim_Anti_Mode = "Static"
-getgenv().Fatality_Anti_Aim_Yaw_Offset = 180
-getgenv().Fatality_Anti_Aim_Pitch_Flip = true
-getgenv().Fatality_Anti_Aim_Jitter_Speed = 10
-getgenv().Fatality_Anti_Aim_Blink_Interval = 0.2
-getgenv().Fatality_Anti_Aim_Desync_Offset = 2
-
-getgenv().Fatality_Speed_Enabled = false
-getgenv().Fatality_Speed_Speed_Mode = "Normal"
-getgenv().Fatality_Speed_Speed_Multiplier = 2
-getgenv().Fatality_Speed_Burst_Duration = 0.5
-getgenv().Fatality_Speed_Sync_with_Blink = true
-
-getgenv().Fatality_ESP_Hitbox_Enabled = false
-getgenv().Fatality_ESP_Hitbox_Highlight_Style = "Wireframe"
-getgenv().Fatality_ESP_Hitbox_Highlight_Local_Hitbox = true
-getgenv().Fatality_ESP_Hitbox_Highlight_Enemy_Hitboxes = false
-getgenv().Fatality_ESP_Hitbox_Box_Thickness = 1
-getgenv().Fatality_ESP_Hitbox_Health_Bar_Color_R = 0
-getgenv().Fatality_ESP_Hitbox_Health_Bar_Color_G = 255
-getgenv().Fatality_ESP_Hitbox_Health_Bar_Color_B = 0
-getgenv().Fatality_ESP_Hitbox_Distance_Limit = 1000
-getgenv().Fatality_ESP_Hitbox_Glow_Intensity = 0.3
-
-getgenv().Fatality_Bullet_Tracers_Enabled = false
-getgenv().Fatality_Bullet_Tracers_Tracer_Style = "Glow"
-getgenv().Fatality_Bullet_Tracers_Line_Width = 2
-getgenv().Fatality_Bullet_Tracers_Color_R = 255
-getgenv().Fatality_Bullet_Tracers_Color_G = 0
-getgenv().Fatality_Bullet_Tracers_Color_B = 0
-getgenv().Fatality_Bullet_Tracers_Duration = 1
-getgenv().Fatality_Bullet_Tracers_Glow_Intensity = 0.5
-getgenv().Fatality_Bullet_Tracers_Notification_Size = 16
-
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
@@ -720,100 +678,59 @@ local function getTargetPart(player)
     local parts = {}
     if getgenv().Fatality_Silent_Aim_Raycast_Head then table.insert(parts, "Head") end
     if getgenv().Fatality_Silent_Aim_Raycast_Torso then table.insert(parts, "Torso") end
-    if getgenv().Fatality_Silent_Aim_Raycast_Random then parts = {"Head", "Torso", "HumanoidRootPart"} end
-
-    local part = parts[math.random(1, #parts)] or "Head"
-    return char:FindFirstChild(part)
+    if getgenv().Fatality_Silent_Aim_Raycast_Random then
+        parts = {"Head", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg"}
+    end
+    return char:FindFirstChild(parts[math.random(1, #parts)] or "Head")
 end
 
-mt.__namecall = newcclosure(function(self, ...)
+local function applyPrediction(targetPos, target)
+    if getgenv().Fatality_Silent_Aim_Prediction and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+        local velocity = target.Character.HumanoidRootPart.Velocity
+        local ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue() / 1000
+        targetPos = targetPos + velocity * ping
+    end
+    return targetPos
+end
+
+mt.__namecall = function(self, ...)
     local args = {...}
     local method = getnamecallmethod()
-
-    if getgenv().Fatality_Silent_Aim_Enabled and method == "FireServer" and (self.Name:find("Fire") or self.Name:find("Shoot")) then
-        local hitChance = getgenv().Fatality_Silent_Aim_Hit_Chance / 100
-        if getgenv().Fatality_Silent_Aim_Aim_Mode == "Legit" and math.random() > hitChance then
-            return oldNamecall(self, ...)
-        end
-
-        local closest = getClosestPlayer()
-        if closest and getTargetPart(closest) then
-            local targetPart = getTargetPart(closest)
-            local targetPos = targetPart.Position
-            if getgenv().Fatality_Silent_Aim_Prediction then
-                local velocity = closest.Character.HumanoidRootPart.Velocity
-                targetPos = targetPos + (velocity * getgenv().Fatality_Silent_Aim_Smoothness)
-            end
-            if getgenv().Fatality_Silent_Aim_Aim_Mode == "Smooth" then
-                local currentPos = args[1] or Camera.CFrame.Position
-                targetPos = currentPos + (targetPos - currentPos) * getgenv().Fatality_Silent_Aim_Smoothness
-            end
-            args[1] = targetPos
-        end
-        return oldNamecall(self, unpack(args))
-    end
-
-    return oldNamecall(self, ...)
-end)
-
-setreadonly(mt, true)
-RunService.Heartbeat:Connect(function()
-    if not getgenv().Fatality_Auto_Pick_Enabled then return end
-    local char = LocalPlayer.Character
-    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
-
-    local closestEnemy = nil
-    local minDist = math.huge
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local dist = (char.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
-            if dist < minDist then
-                minDist = dist
-                closestEnemy = player
+    if getgenv().Fatality_Silent_Aim_Enabled and method == "FindPartOnRayWithIgnoreList" then
+        local closestPlayer = getClosestPlayer()
+        if closestPlayer and closestPlayer.Character and math.random(1, 100) <= getgenv().Fatality_Silent_Aim_Hit_Chance then
+            local targetPart = getTargetPart(closestPlayer)
+            if targetPart then
+                local targetPos = applyPrediction(targetPart.Position, closestPlayer)
+                local ray = args[1]
+                local origin = ray.Origin
+                local direction = (targetPos - origin).Unit * 1000
+                args[1] = Ray.new(origin, direction)
             end
         end
     end
+    return oldNamecall(self, unpack(args))
+end
 
-    if closestEnemy and getgenv().Fatality_Auto_Pick_Wall_Peek_Sensitivity > 0 then
-        local raycastParams = RaycastParams.new()
-        raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-        raycastParams.FilterDescendantsInstances = {char}
-        local ray = Workspace:Raycast(char.HumanoidRootPart.Position, (closestEnemy.Character.HumanoidRootPart.Position - char.HumanoidRootPart.Position).Unit * minDist, raycastParams)
-        local isBehindWall = ray and not ray.Instance:IsDescendantOf(closestEnemy.Character)
-        if not isBehindWall then
-            local offset = (closestEnemy.Character.HumanoidRootPart.Position - char.HumanoidRootPart.Position).Unit * getgenv().Fatality_Auto_Pick_Wall_Peek_Sensitivity
-            char.HumanoidRootPart.CFrame = CFrame.new(char.HumanoidRootPart.Position + offset)
-        end
-    end
-
-    for _, obj in ipairs(Workspace:GetChildren()) do
-        if obj:IsA("Tool") and obj:FindFirstChild("Handle") then
-            local mode = getgenv().Fatality_Auto_Pick_Pickup_Mode
-            if mode == "Weapons Only" and not obj.Name:find("Weapon") then continue end
-            if mode == "Rare Only" and (not obj:FindFirstChild("Rarity") or obj.Rarity.Value ~= "Rare") then continue end
-            if mode == "Ammo Only" and not obj.Name:find("Ammo") then continue end
-            local dist = (char.HumanoidRootPart.Position - obj.Handle.Position).Magnitude
-            if mode == "Proximity" and dist > getgenv().Fatality_Auto_Pick_Pickup_Range then continue end
-            if mode == "Smart" then
-                local value = (obj:FindFirstChild("Rarity") and obj.Rarity.Value == "Rare" and 2 or 1) / dist
-                if value < 0.1 then continue end
-            end
-            if dist < getgenv().Fatality_Auto_Pick_Pickup_Range then
-                if getgenv().Fatality_Auto_Pick_Prioritize_Rare and obj.Rarity and obj.Rarity.Value ~= "Rare" then continue end
-                if getgenv().Fatality_Auto_Pick_Auto_Pickup then
-                    local remote = obj:FindFirstChildOfClass("RemoteEvent")
-                    if remote then
-                        remote:FireServer("Pickup")
-                    else
-                        obj.Handle.CFrame = char.HumanoidRootPart.CFrame
-                        firetouchinterest(char.HumanoidRootPart, obj.Handle, 0)
-                        wait(0.05)
-                        firetouchinterest(char.HumanoidRootPart, obj.Handle, 1)
-                    end
-                    if getgenv().Fatality_Auto_Pick_Auto_Equip then
-                        if obj.Parent ~= LocalPlayer.Backpack then
-                            obj.Parent = LocalPlayer.Backpack
-                            LocalPlayer.Character.Humanoid:EquipTool(obj)
+RunService.RenderStepped:Connect(function()
+    if getgenv().Fatality_Auto_Pick_Enabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        for _, obj in ipairs(Workspace:GetDescendants()) do
+            if obj:IsA("BasePart") and obj:FindFirstChild("TouchTransmitter") then
+                local distance = (obj.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+                if distance <= getgenv().Fatality_Auto_Pick_Pickup_Range then
+                    local mode = getgenv().Fatality_Auto_Pick_Pickup_Mode
+                    local isValid = mode == "All" or
+                        (mode == "Weapons Only" and obj.Name:lower():match("gun") or obj.Name:lower():match("weapon")) or
+                        (mode == "Rare Only" and getgenv().Fatality_Auto_Pick_Prioritize_Rare and obj.Name:lower():match("rare")) or
+                        (mode == "Ammo Only" and obj.Name:lower():match("ammo")) or
+                        (mode == "Proximity" and distance <= 10) or
+                        (mode == "Smart" and (obj.Name:lower():match("gun") or obj.Name:lower():match("ammo") or obj.Name:lower():match("rare")))
+                    if isValid then
+                        firetouchinterest(LocalPlayer.Character.HumanoidRootPart, obj, 0)
+                        wait()
+                        firetouchinterest(LocalPlayer.Character.HumanoidRootPart, obj, 1)
+                        if getgenv().Fatality_Auto_Pick_Auto_Equip then
+                            game:GetService("ReplicatedStorage").Remotes.EquipTool:FireServer(obj.Name)
                         end
                     end
                 end
@@ -821,447 +738,464 @@ RunService.Heartbeat:Connect(function()
         end
     end
 end)
+getgenv().Fatality_Fake_Lag_Enabled = false
+getgenv().Fatality_Fake_Lag_Lag_Mode = "Constant"
+getgenv().Fatality_Fake_Lag_Lag_Intensity = 0.5
+getgenv().Fatality_Fake_Lag_Packet_Loss_Mode = false
+getgenv().Fatality_Fake_Lag_Delay = 100
+getgenv().Fatality_Fake_Lag_Blink_Interval = 1.5
+getgenv().Fatality_Fake_Lag_Jitter = true
 
-local lagConnection
-local lastUpdate = tick()
-local storedPosition = nil
-local isBlinking = false
+getgenv().Fatality_Anti_Aim_Enabled = false
+getgenv().Fatality_Anti_Aim_Anti_Mode = "Static"
+getgenv().Fatality_Anti_Aim_Yaw_Offset = 180
+getgenv().Fatality_Anti_Aim_Pitch_Flip = true
+getgenv().Fatality_Anti_Aim_Jitter_Speed = 10
+getgenv().Fatality_Anti_Aim_Blink_Interval = 0.2
+getgenv().Fatality_Anti_Aim_Desync_Offset = 2
 
-if lagConnection then lagConnection:Disconnect() end
+local NetworkClient = game:GetService("NetworkClient")
+local RunService = game:GetService("RunService")
 
-lagConnection = RunService.Heartbeat:Connect(function()
-    if not getgenv().Fatality_Fake_Lag_Enabled then
-        storedPosition = nil
-        isBlinking = false
-        return
-    end
-    local char = LocalPlayer.Character
-    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+RunService.Heartbeat:Connect(function()
+    if getgenv().Fatality_Fake_Lag_Enabled then
+        local mode = getgenv().Fatality_Fake_Lag_Lag_Mode
+        local intensity = getgenv().Fatality_Fake_Lag_Lag_Intensity
+        local delay = getgenv().Fatality_Fake_Lag_Delay / 1000
+        local blinkInterval = getgenv().Fatality_Fake_Lag_Blink_Interval
 
-    local currentTime = tick()
-    local delay = getgenv().Fatality_Fake_Lag_Delay / 1000
-    local mode = getgenv().Fatality_Fake_Lag_Lag_Mode
-
-    if mode == "Random" then
-        delay = delay * math.random(0.5, 1.5)
-    elseif mode == "Blink" then
-        if currentTime - lastUpdate >= getgenv().Fatality_Fake_Lag_Blink_Interval then
-            isBlinking = not isBlinking
-            lastUpdate = currentTime
-            if not isBlinking then
-                storedPosition = char.HumanoidRootPart.CFrame
+        if mode == "Constant" then
+            NetworkClient:SetOutgoingKBPSLimit(intensity * 1000)
+        elseif mode == "Random" then
+            NetworkClient:SetOutgoingKBPSLimit(math.random(100, 1000) * intensity)
+        elseif mode == "Blink" then
+            if math.floor(tick() % blinkInterval) == 0 then
+                NetworkClient:SetOutgoingKBPSLimit(0)
+            else
+                NetworkClient:SetOutgoingKBPSLimit(1000)
             end
+        elseif mode == "Adaptive" then
+            local ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()
+            NetworkClient:SetOutgoingKBPSLimit(math.clamp(1000 - ping * intensity, 100, 1000))
+        elseif mode == "Pulse" then
+            NetworkClient:SetOutgoingKBPSLimit(math.sin(tick()) * 500 * intensity + 500)
+        elseif mode == "Jitter Only" and getgenv().Fatality_Fake_Lag_Jitter then
+            NetworkClient:SetOutgoingKBPSLimit(math.random(200, 800))
         end
-        if isBlinking and storedPosition then
-            char.HumanoidRootPart.CFrame = storedPosition
-            if getgenv().Fatality_Fake_Lag_Packet_Loss_Mode and math.random() < 0.2 then
-                return
-            end
-            return
-        end
-    elseif mode == "Constant" then
-        if currentTime - lastUpdate < delay * getgenv().Fatality_Fake_Lag_Lag_Intensity then
-            if storedPosition then
-                char.HumanoidRootPart.CFrame = storedPosition
-            end
-            if getgenv().Fatality_Fake_Lag_Packet_Loss_Mode and math.random() < 0.2 then
-                return
-            end
-            return
-        end
-    elseif mode == "Adaptive" then
-        local moveDir = char.Humanoid.MoveDirection.Magnitude
-        if moveDir > 0 then
-            delay = delay * 0.5
-        end
-        if currentTime - lastUpdate < delay then
-            if storedPosition then
-                char.HumanoidRootPart.CFrame = storedPosition
-            end
-            return
-        end
-    elseif mode == "Pulse" then
-        if math.sin(currentTime * 5) > 0 then
-            if storedPosition then
-                char.HumanoidRootPart.CFrame = storedPosition
-            end
-            return
-        end
-    elseif mode == "Jitter Only" then
-        char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame + Vector3.new(math.random(-0.5, 0.5), 0, math.random(-0.5, 0.5)) * 0.1
-        return
-    end
 
-    storedPosition = char.HumanoidRootPart.CFrame
-    if getgenv().Fatality_Fake_Lag_Jitter then
-        char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame + Vector3.new(math.random(-0.5, 0.5), 0, math.random(-0.5, 0.5)) * 0.1
-    end
-    lastUpdate = currentTime
-end)
-
-local antiAimConnection
-local antiLastUpdate = tick()
-local antiStoredPosition = nil
-
-if antiAimConnection then antiAimConnection:Disconnect() end
-
-antiAimConnection = RunService.Heartbeat:Connect(function()
-    if not getgenv().Fatality_Anti_Aim_Enabled then
-        antiStoredPosition = nil
-        return
-    end
-    local char = LocalPlayer.Character
-    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
-
-    local currentTime = tick()
-    local mode = getgenv().Fatality_Anti_Aim_Anti_Mode
-    antiStoredPosition = char.HumanoidRootPart.CFrame
-
-    if mode == "Static" then
-        local yaw = math.rad(getgenv().Fatality_Anti_Aim_Yaw_Offset)
-        local pitch = getgenv().Fatality_Anti_Aim_Pitch_Flip and -math.pi/2 or math.pi/2
-        char.HumanoidRootPart.CFrame = CFrame.new(char.HumanoidRootPart.Position) * CFrame.Angles(pitch, yaw, 0)
-    elseif mode == "Jitter" then
-        local offset = math.sin(currentTime * getgenv().Fatality_Anti_Aim_Jitter_Speed) * math.rad(30)
-        char.HumanoidRootPart.CFrame = CFrame.new(char.HumanoidRootPart.Position) * CFrame.Angles(0, offset, 0)
-    elseif mode == "Spin" then
-        local yaw = (currentTime * getgenv().Fatality_Anti_Aim_Jitter_Speed) % (2 * math.pi)
-        char.HumanoidRootPart.CFrame = CFrame.new(char.HumanoidRootPart.Position) * CFrame.Angles(0, yaw, 0)
-    elseif mode == "Blink" then
-        if currentTime - antiLastUpdate >= getgenv().Fatality_Anti_Aim_Blink_Interval then
-            char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame + Vector3.new(math.random(-1, 1), math.random(-0.5, 0.5), math.random(-1, 1))
-            antiLastUpdate = currentTime
+        if getgenv().Fatality_Fake_Lag_Packet_Loss_Mode then
+            wait(delay)
         end
-    elseif mode == "Desync Offset" then
-        local offset = Vector3.new(getgenv().Fatality_Anti_Aim_Desync_Offset * (math.random(0, 1) == 0 and 1 or -1), 0, 0)
-        char.HumanoidRootPart.CFrame = CFrame.new(char.HumanoidRootPart.Position + offset)
-    elseif mode == "Random Mix" then
-        local modes = {"Static", "Jitter", "Spin", "Blink", "Desync Offset"}
-        local randomMode = modes[math.random(1, #modes)]
-        if randomMode == "Static" then
-            local yaw = math.rad(getgenv().Fatality_Anti_Aim_Yaw_Offset)
-            local pitch = getgenv().Fatality_Anti_Aim_Pitch_Flip and -math.pi/2 or math.pi/2
-            char.HumanoidRootPart.CFrame = CFrame.new(char.HumanoidRootPart.Position) * CFrame.Angles(pitch, yaw, 0)
-        elseif randomMode == "Jitter" then
-            local offset = math.sin(currentTime * getgenv().Fatality_Anti_Aim_Jitter_Speed) * math.rad(30)
-            char.HumanoidRootPart.CFrame = CFrame.new(char.HumanoidRootPart.Position) * CFrame.Angles(0, offset, 0)
-        elseif randomMode == "Spin" then
-            local yaw = (currentTime * getgenv().Fatality_Anti_Aim_Jitter_Speed) % (2 * math.pi)
-            char.HumanoidRootPart.CFrame = CFrame.new(char.HumanoidRootPart.Position) * CFrame.Angles(0, yaw, 0)
-        elseif randomMode == "Blink" then
-            if currentTime - antiLastUpdate >= getgenv().Fatality_Anti_Aim_Blink_Interval then
-                char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame + Vector3.new(math.random(-1, 1), math.random(-0.5, 0.5), math.random(-1, 1))
-                antiLastUpdate = currentTime
-            end
-        elseif randomMode == "Desync Offset" then
-            local offset = Vector3.new(getgenv().Fatality_Anti_Aim_Desync_Offset * (math.random(0, 1) == 0 and 1 or -1), 0, 0)
-            char.HumanoidRootPart.CFrame = CFrame.new(char.HumanoidRootPart.Position + offset)
-        end
+    else
+        NetworkClient:SetOutgoingKBPSLimit(0)
     end
 end)
 
-local speedConnection
-local speedLastUpdate = tick()
-local baseWalkSpeed = 16
+RunService.Stepped:Connect(function()
+    if getgenv().Fatality_Anti_Aim_Enabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local mode = getgenv().Fatality_Anti_Aim_Anti_Mode
+        local root = LocalPlayer.Character.HumanoidRootPart
+        local yaw = getgenv().Fatality_Anti_Aim_Yaw_Offset
+        local pitch = getgenv().Fatality_Anti_Aim_Pitch_Flip and -1 or 1
+        local jitter = getgenv().Fatality_Anti_Aim_Jitter_Speed
+        local blink = getgenv().Fatality_Anti_Aim_Blink_Interval
+        local desync = getgenv().Fatality_Anti_Aim_Desync_Offset
 
-if speedConnection then speedConnection:Disconnect() end
-
-speedConnection = RunService.Heartbeat:Connect(function()
-    if not getgenv().Fatality_Speed_Enabled then
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            LocalPlayer.Character.Humanoid.WalkSpeed = baseWalkSpeed
-        end
-        return
-    end
-    local char = LocalPlayer.Character
-    if not char or not char:FindFirstChild("HumanoidRootPart") or not char:FindFirstChild("Humanoid") then return end
-
-    local currentTime = tick()
-    local mode = getgenv().Fatality_Speed_Speed_Mode
-    local multiplier = getgenv().Fatality_Speed_Speed_Multiplier
-    local humanoid = char.Humanoid
-
-    if mode == "Normal" then
-        humanoid.WalkSpeed = baseWalkSpeed * multiplier
-    elseif mode == "Adaptive" then
-        local moveDir = humanoid.MoveDirection.Magnitude
-        humanoid.WalkSpeed = baseWalkSpeed * (1 + (moveDir > 0 and multiplier or 0))
-    elseif mode == "Burst" then
-        if getgenv().Fatality_Speed_Sync_with_Blink and getgenv().Fatality_Fake_Lag_Enabled and getgenv().Fatality_Fake_Lag_Lag_Mode == "Blink" then
-            if isBlinking then
-                humanoid.WalkSpeed = baseWalkSpeed
-            else
-                humanoid.WalkSpeed = baseWalkSpeed * multiplier
+        if mode == "Static" then
+            root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(yaw), 0) * CFrame.Angles(math.rad(90 * pitch), 0, 0)
+        elseif mode == "Jitter" then
+            root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(yaw + math.sin(tick() * jitter) * 30), 0)
+        elseif mode == "Spin" then
+            root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(tick() * 360), 0)
+        elseif mode == "Blink" then
+            if math.floor(tick() % blink) == 0 then
+                root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(yaw), 0)
             end
-        else
-            if currentTime - speedLastUpdate >= getgenv().Fatality_Speed_Burst_Duration then
-                humanoid.WalkSpeed = baseWalkSpeed * multiplier
-                speedLastUpdate = currentTime
-            else
-                humanoid.WalkSpeed = baseWalkSpeed
-            end
+        elseif mode == "Desync Offset" then
+            root.CFrame = root.CFrame * CFrame.new(Vector3.new(desync, 0, desync)) * CFrame.Angles(0, math.rad(yaw), 0)
+        elseif mode == "Random Mix" then
+            root.CFrame = root.CFrame * CFrame.Angles(math.random(-1, 1) * math.rad(90), math.rad(yaw + math.random(-30, 30)), 0)
         end
-    elseif mode == "Strafe" then
-        humanoid.WalkSpeed = baseWalkSpeed * multiplier
-        local moveDir = humanoid.MoveDirection
-        if moveDir.Magnitude > 0 then
-            char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame + Vector3.new(moveDir.X, 0, moveDir.Z) * 0.1
-        end
-    elseif mode == "Bunny Hop" then
-        humanoid.WalkSpeed = baseWalkSpeed * multiplier
-        if humanoid.Jump then
-            char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame + Vector3.new(0, multiplier * 0.5, 0)
-        end
-    elseif mode == "Teleport" then
-        if currentTime - speedLastUpdate >= getgenv().Fatality_Speed_Burst_Duration then
-            local moveDir = humanoid.MoveDirection
-            if moveDir.Magnitude > 0 then
-                char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame + moveDir * multiplier
-            end
-            speedLastUpdate = currentTime
-        end
-    end
-
-    if multiplier > 1 then
-        local moveDir = humanoid.MoveDirection * multiplier
-        char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame + moveDir * 0.1
     end
 end)
-local highlightConnections = {}
+getgenv().Fatality_Speed_Enabled = false
+getgenv().Fatality_Speed_Speed_Mode = "Normal"
+getgenv().Fatality_Speed_Speed_Multiplier = 2
+getgenv().Fatality_Speed_Burst_Duration = 0.5
+getgenv().Fatality_Speed_Sync_with_Blink = true
 
-local function createHighlight(part)
-    if part:FindFirstChildOfClass("Highlight") then return end
-    local highlight = Instance.new("Highlight")
-    highlight.Adornee = part
-    highlight.FillColor = Color3.fromRGB(
-        getgenv().Fatality_ESP_Hitbox_Health_Bar_Color_R,
-        getgenv().Fatality_ESP_Hitbox_Health_Bar_Color_G,
-        getgenv().Fatality_ESP_Hitbox_Health_Bar_Color_B
-    )
-    highlight.OutlineColor = Colors.White
-    local style = getgenv().Fatality_ESP_Hitbox_Highlight_Style
-    highlight.FillTransparency = style == "Wireframe" or style == "Box Only" and 1 or (style == "Glow" or style == "Full" and getgenv().Fatality_ESP_Hitbox_Glow_Intensity or 0.5)
-    highlight.OutlineTransparency = style == "Wireframe" or style == "Outline" or style == "Full" and 0 or 1
-    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-    highlight.Parent = part
+getgenv().Fatality_Shift_Lock_Enabled = false
+getgenv().Fatality_Shift_Lock_Shift_Speed = 5
 
-    if style == "Health Only" or style == "Full" then
-        local billboard = Instance.new("BillboardGui")
-        billboard.Name = "ESPBillboard"
-        billboard.Size = UDim2.new(0, 50, 0, 20)
-        billboard.Adornee = part
-        billboard.AlwaysOnTop = true
-        billboard.StudsOffset = Vector3.new(0, 2, 0)
-        billboard.Parent = part
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
-        local healthBar = Instance.new("Frame")
-        healthBar.Size = UDim2.new(1, 0, 0, 5)
-        healthBar.Position = UDim2.new(0, 0, 0, 0)
-        healthBar.BackgroundColor3 = Color3.fromRGB(
-            getgenv().Fatality_ESP_Hitbox_Health_Bar_Color_R,
-            getgenv().Fatality_ESP_Hitbox_Health_Bar_Color_G,
-            getgenv().Fatality_ESP_Hitbox_Health_Bar_Color_B
-        )
-        healthBar.BorderSizePixel = 0
-        healthBar.Parent = billboard
+local ShiftButton = Instance.new("TextButton")
+ShiftButton.Name = "ShiftButton"
+ShiftButton.Size = UDim2.new(0, 50, 0, 50)
+ShiftButton.Position = UDim2.new(0, 10, 1, -60)
+ShiftButton.BackgroundColor3 = Colors.Dark
+ShiftButton.BorderSizePixel = 0
+ShiftButton.Text = "Shift"
+ShiftButton.TextColor3 = Colors.White
+ShiftButton.TextScaled = true
+ShiftButton.Font = Enum.Font.Gotham
+ShiftButton.Parent = ScreenGui
 
-        local nameLabel = Instance.new("TextLabel")
-        nameLabel.Size = UDim2.new(1, 0, 0, 10)
-        nameLabel.Position = UDim2.new(0, 0, 0, 5)
-        nameLabel.BackgroundTransparency = 1
-        nameLabel.Text = part.Parent.Name
-        nameLabel.TextColor3 = Colors.White
-        nameLabel.TextScaled = true
-        nameLabel.Font = Enum.Font.Gotham
-        nameLabel.Parent = billboard
+local ShiftCorner = Instance.new("UICorner")
+ShiftCorner.CornerRadius = UDim.new(0, 8)
+ShiftCorner.Parent = ShiftButton
 
-        local distanceLabel = Instance.new("TextLabel")
-        distanceLabel.Size = UDim2.new(1, 0, 0, 10)
-        distanceLabel.Position = UDim2.new(0, 0, 0, 15)
-        distanceLabel.BackgroundTransparency = 1
-        distanceLabel.Text = "0 studs"
-        distanceLabel.TextColor3 = Colors.White
-        distanceLabel.TextScaled = true
-        distanceLabel.Font = Enum.Font.Gotham
-        distanceLabel.Parent = billboard
+local shiftDragging = false
+local shiftDragStart = nil
+local shiftStartPos = nil
 
-        RunService.RenderStepped:Connect(function()
-            if part.Parent and part.Parent:FindFirstChild("Humanoid") then
-                local health = part.Parent.Humanoid.Health / part.Parent.Humanoid.MaxHealth
-                healthBar.Size = UDim2.new(health, 0, 0, 5)
-                local dist = (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and (LocalPlayer.Character.HumanoidRootPart.Position - part.Position).Magnitude) or 0
-                distanceLabel.Text = math.floor(dist) .. " studs"
+ShiftButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        shiftDragging = true
+        shiftDragStart = input.Position
+        shiftStartPos = ShiftButton.Position
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if shiftDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - shiftDragStart
+        ShiftButton.Position = UDim2.new(shiftStartPos.X.Scale, shiftStartPos.X.Offset + delta.X, shiftStartPos.Y.Scale, shiftStartPos.Y.Offset + delta.Y)
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        shiftDragging = false
+    end
+end)
+
+local isShifting = false
+ShiftButton.MouseButton1Click:Connect(function()
+    if getgenv().Fatality_Shift_Lock_Enabled then
+        isShifting = not isShifting
+        ShiftButton.BackgroundColor3 = isShifting and Colors.DarkPink or Colors.Dark
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    if getgenv().Fatality_Speed_Enabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        local humanoid = LocalPlayer.Character.Humanoid
+        local mode = getgenv().Fatality_Speed_Speed_Mode
+        local multiplier = getgenv().Fatality_Speed_Speed_Multiplier
+        local burstDuration = getgenv().Fatality_Speed_Burst_Duration
+
+        local baseSpeed = isShifting and getgenv().Fatality_Shift_Lock_Shift_Speed or 16 * multiplier
+
+        if mode == "Normal" then
+            humanoid.WalkSpeed = baseSpeed
+        elseif mode == "Adaptive" then
+            humanoid.WalkSpeed = baseSpeed + math.sin(tick()) * 5
+        elseif mode == "Burst" then
+            if math.floor(tick() % burstDuration) == 0 then
+                humanoid.WalkSpeed = baseSpeed * 2
             else
-                billboard:Destroy()
+                humanoid.WalkSpeed = baseSpeed
             end
-        end)
+        elseif mode == "Strafe" then
+            humanoid.WalkSpeed = baseSpeed + (UserInputService:IsKeyDown(Enum.KeyCode.A) or UserInputService:IsKeyDown(Enum.KeyCode.D)) and 5 or 0
+        elseif mode == "Bunny Hop" then
+            if humanoid.Jump then
+                humanoid.WalkSpeed = baseSpeed * 1.5
+            else
+                humanoid.WalkSpeed = baseSpeed
+            end
+        elseif mode == "Teleport" and getgenv().Fatality_Speed_Sync_with_Blink then
+            if math.floor(tick() % 1) == 0 then
+                LocalPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame + LocalPlayer.Character.Humanoid.MoveDirection * baseSpeed
+            end
+        end
+    elseif LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        local humanoid = LocalPlayer.Character.Humanoid
+        humanoid.WalkSpeed = isShifting and getgenv().Fatality_Shift_Lock_Shift_Speed or 16
+    end
+end)
+getgenv().Fatality_ESP_Hitbox_Enabled = false
+getgenv().Fatality_ESP_Hitbox_Highlight_Style = "Wireframe"
+getgenv().Fatality_ESP_Hitbox_Highlight_Local_Hitbox = true
+getgenv().Fatality_ESP_Hitbox_Highlight_Enemy_Hitboxes = false
+getgenv().Fatality_ESP_Hitbox_Box_Thickness = 1
+getgenv().Fatality_ESP_Hitbox_Health_Bar_Color_R = 0
+getgenv().Fatality_ESP_Hitbox_Health_Bar_Color_G = 255
+getgenv().Fatality_ESP_Hitbox_Health_Bar_Color_B = 0
+getgenv().Fatality_ESP_Hitbox_Distance_Limit = 1000
+getgenv().Fatality_ESP_Hitbox_Glow_Intensity = 0.3
+
+getgenv().Fatality_Bullet_Tracers_Enabled = false
+getgenv().Fatality_Bullet_Tracers_Tracer_Style = "Glow"
+getgenv().Fatality_Bullet_Tracers_Line_Width = 2
+getgenv().Fatality_Bullet_Tracers_Color_R = 255
+getgenv().Fatality_Bullet_Tracers_Color_G = 0
+getgenv().Fatality_Bullet_Tracers_Color_B = 0
+getgenv().Fatality_Bullet_Tracers_Duration = 1
+getgenv().Fatality_Bullet_Tracers_Glow_Intensity = 0.5
+getgenv().Fatality_Bullet_Tracers_Notification_Size = 16
+
+getgenv().Fatality_Hit_Particles_Enabled = false
+getgenv().Fatality_Hit_Particles_Particle_Size = 1
+getgenv().Fatality_Hit_Particles_Particle_Color_R = 255
+getgenv().Fatality_Hit_Particles_Particle_Color_G = 0
+getgenv().Fatality_Hit_Particles_Particle_Color_B = 0
+
+getgenv().Fatality_Kill_Effect_Enabled = false
+getgenv().Fatality_Kill_Effect_Effect_Intensity = 1
+
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local Debris = game:GetService("Debris")
+
+local LocalPlayer = Players.LocalPlayer
+local Camera = Workspace.CurrentCamera
+
+local function createBox(player)
+    local box = Instance.new("BoxHandleAdornment")
+    box.Size = Vector3.new(4, 6, 4)
+    box.Color3 = Color3.fromRGB(getgenv().Fatality_ESP_Hitbox_Health_Bar_Color_R, getgenv().Fatality_ESP_Hitbox_Health_Bar_Color_G, getgenv().Fatality_ESP_Hitbox_Health_Bar_Color_B)
+    box.Transparency = getgenv().Fatality_ESP_Hitbox_Highlight_Style == "Glow" and 0.5 or 0.7
+    box.ZIndex = 10
+    box.AlwaysOnTop = getgenv().Fatality_ESP_Hitbox_Highlight_Style == "Wireframe" or getgenv().Fatality_ESP_Hitbox_Highlight_Style == "Outline"
+    box.Adornee = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    box.Parent = game.CoreGui
+    return box
+end
+
+local function createHealthBar(player)
+    local billboard = Instance.new("BillboardGui")
+    billboard.Size = UDim2.new(0, 50, 0, 5)
+    billboard.AlwaysOnTop = true
+    billboard.Adornee = player.Character and player.Character:FindFirstChild("Head")
+    billboard.Parent = game.CoreGui
+
+    local healthFrame = Instance.new("Frame")
+    healthFrame.Size = UDim2.new(1, 0, 1, 0)
+    healthFrame.BackgroundColor3 = Color3.fromRGB(getgenv().Fatality_ESP_Hitbox_Health_Bar_Color_R, getgenv().Fatality_ESP_Hitbox_Health_Bar_Color_G, getgenv().Fatality_ESP_Hitbox_Health_Bar_Color_B)
+    healthFrame.Parent = billboard
+
+    return billboard
+end
+
+RunService.RenderStepped:Connect(function()
+    if getgenv().Fatality_ESP_Hitbox_Enabled then
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                if not getgenv().Fatality_ESP_Hitbox_Highlight_Enemy_Hitboxes then continue end
+                local distance = (LocalPlayer.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+                if distance > getgenv().Fatality_ESP_Hitbox_Distance_Limit then continue end
+
+                local box = game.CoreGui:FindFirstChild(player.Name .. "_Box")
+                if not box then
+                    box = createBox(player)
+                    box.Name = player.Name .. "_Box"
+                end
+                box.Adornee = player.Character.HumanoidRootPart
+
+                if getgenv().Fatality_ESP_Hitbox_Highlight_Style == "Health Only" or getgenv().Fatality_ESP_Hitbox_Highlight_Style == "Full" then
+                    local healthBar = game.CoreGui:FindFirstChild(player.Name .. "_HealthBar")
+                    if not healthBar then
+                        healthBar = createHealthBar(player)
+                        healthBar.Name = player.Name .. "_HealthBar"
+                    end
+                    healthBar.Adornee = player.Character.Head
+                    local health = player.Character.Humanoid.Health / player.Character.Humanoid.MaxHealth
+                    healthBar.Frame.Size = UDim2.new(health, 0, 1, 0)
+                end
+            end
+        end
+    end
+end)
+
+local function createTracer(startPos, endPos)
+    local tracer = Instance.new("Frame")
+    tracer.Size = UDim2.new(0, getgenv().Fatality_Bullet_Tracers_Line_Width, 0, (startPos - endPos).Magnitude)
+    tracer.Position = UDim2.new(0, (startPos.X + endPos.X) / 2, 0, (startPos.Y + endPos.Y) / 2)
+    tracer.Rotation = math.deg(math.atan2(endPos.Y - startPos.Y, endPos.X - startPos.X))
+    tracer.BackgroundColor3 = Color3.fromRGB(getgenv().Fatality_Bullet_Tracers_Color_R, getgenv().Fatality_Bullet_Tracers_Color_G, getgenv().Fatality_Bullet_Tracers_Color_B)
+    tracer.BorderSizePixel = 0
+    tracer.Parent = game.CoreGui
+    Debris:AddItem(tracer, getgenv().Fatality_Bullet_Tracers_Duration)
+
+    if getgenv().Fatality_Bullet_Tracers_Tracer_Style == "Glow" then
+        local glow = Instance.new("ImageLabel")
+        glow.Size = UDim2.new(1, 10, 1, 10)
+        glow.Position = UDim2.new(0, -5, 0, -5)
+        glow.BackgroundTransparency = 1
+        glow.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+        glow.ImageColor3 = Color3.fromRGB(getgenv().Fatality_Bullet_Tracers_Color_R, getgenv().Fatality_Bullet_Tracers_Color_G, getgenv().Fatality_Bullet_Tracers_Color_B)
+        glow.ImageTransparency = 1 - getgenv().Fatality_Bullet_Tracers_Glow_Intensity
+        glow.Parent = tracer
     end
 end
 
-RunService.Heartbeat:Connect(function()
-    if not getgenv().Fatality_ESP_Hitbox_Enabled then
-        for _, conn in pairs(highlightConnections) do
-            conn:Disconnect()
-        end
-        highlightConnections = {}
-        for _, player in ipairs(Players:GetPlayers()) do
-            if player.Character then
-                for _, part in ipairs(player.Character:GetChildren()) do
-                    if part:IsA("BasePart") then
-                        if part:FindFirstChildOfClass("Highlight") then
-                            part:FindFirstChildOfClass("Highlight"):Destroy()
-                        end
-                        if part:FindFirstChild("ESPBillboard") then
-                            part:FindFirstChild("ESPBillboard"):Destroy()
-                        end
-                    end
-                end
-            end
-        end
-        return
-    end
+local function createParticle(position)
+    local particle = Instance.new("Part")
+    particle.Size = Vector3.new(getgenv().Fatality_Hit_Particles_Particle_Size, getgenv().Fatality_Hit_Particles_Particle_Size, getgenv().Fatality_Hit_Particles_Particle_Size)
+    particle.Position = position
+    particle.Color = Color3.fromRGB(getgenv().Fatality_Hit_Particles_Particle_Color_R, getgenv().Fatality_Hit_Particles_Particle_Color_G, getgenv().Fatality_Hit_Particles_Particle_Color_B)
+    particle.Anchored = true
+    particle.CanCollide = false
+    particle.Parent = Workspace
+    Debris:AddItem(particle, 0.5)
 
-    if getgenv().Fatality_ESP_Hitbox_Highlight_Local_Hitbox and LocalPlayer.Character then
-        for _, part in ipairs(LocalPlayer.Character:GetChildren()) do
-            if part:IsA("BasePart") then
-                createHighlight(part)
-            end
-        end
-    end
-
-    if getgenv().Fatality_ESP_Hitbox_Highlight_Enemy_Hitboxes then
-        for _, player in ipairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Character then
-                for _, part in ipairs(player.Character:GetChildren()) do
-                    if part:IsA("BasePart") then
-                        createHighlight(part)
-                    end
-                end
-            end
-        end
-    end
-
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player.Character and not highlightConnections[player] then
-            local conn = player.Character.ChildAdded:Connect(function(child)
-                if getgenv().Fatality_ESP_Hitbox_Enabled and child:IsA("BasePart") then
-                    if (player == LocalPlayer and getgenv().Fatality_ESP_Hitbox_Highlight_Local_Hitbox) or
-                       (player ~= LocalPlayer and getgenv().Fatality_ESP_Hitbox_Highlight_Enemy_Hitboxes) then
-                        createHighlight(child)
-                    end
-                end
-            end)
-            highlightConnections[player] = conn
-        end
-    end
-end)
-
-local function createTracer(startPos, endPos, damage)
-    if not getgenv().Fatality_Bullet_Tracers_Enabled then return end
-
-    local tracer = Instance.new("Part")
-    tracer.Anchored = true
-    tracer.CanCollide = false
-    tracer.Size = Vector3.new(getgenv().Fatality_Bullet_Tracers_Line_Width / 10, getgenv().Fatality_Bullet_Tracers_Line_Width / 10, (startPos - endPos).Magnitude)
-    tracer.CFrame = CFrame.new(startPos, endPos) * CFrame.new(0, 0, -(startPos - endPos).Magnitude / 2)
-    tracer.BrickColor = BrickColor.new(Color3.fromRGB(
-        getgenv().Fatality_Bullet_Tracers_Color_R,
-        getgenv().Fatality_Bullet_Tracers_Color_G,
-        getgenv().Fatality_Bullet_Tracers_Color_B
-    ))
-    tracer.Material = Enum.Material.Neon
-    tracer.Parent = Workspace
-
-    local style = getgenv().Fatality_Bullet_Tracers_Tracer_Style
-    if style == "Dashed" then
-        tracer.Size = Vector3.new(getgenv().Fatality_Bullet_Tracers_Line_Width / 10, getgenv().Fatality_Bullet_Tracers_Line_Width / 10, (startPos - endPos).Magnitude / 2)
-        local secondTracer = Instance.new("Part")
-        secondTracer.Anchored = true
-        secondTracer.CanCollide = false
-        secondTracer.Size = Vector3.new(getgenv().Fatality_Bullet_Tracers_Line_Width / 10, getgenv().Fatality_Bullet_Tracers_Line_Width / 10, (startPos - endPos).Magnitude / 2)
-        secondTracer.CFrame = CFrame.new(startPos, endPos) * CFrame.new(0, 0, -(startPos - endPos).Magnitude / 4)
-        secondTracer.BrickColor = tracer.BrickColor
-        secondTracer.Material = Enum.Material.Neon
-        secondTracer.Parent = Workspace
-        spawn(function()
-            wait(getgenv().Fatality_Bullet_Tracers_Duration)
-            secondTracer:Destroy()
-        end)
-    elseif style == "Gradient" then
-        local gradient = Instance.new("Gradient")
-        gradient.Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, tracer.BrickColor.Color),
-            ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255))
-        })
-        gradient.Parent = tracer
-    elseif style == "Pulse" then
-        spawn(function()
-            local tween = game:GetService("TweenService"):Create(tracer, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {Transparency = 0.5})
-            tween:Play()
-        end)
-    elseif style == "Rainbow" then
-        spawn(function()
-            while tracer.Parent do
-                tracer.BrickColor = BrickColor.new(Color3.fromHSV(tick() % 5 / 5, 1, 1))
-                wait(0.1)
-            end
-        end)
-    end
-
-    if style == "Glow" or style == "Full" then
-        local highlight = Instance.new("Highlight")
-        highlight.Adornee = tracer
-        highlight.FillTransparency = getgenv().Fatality_Bullet_Tracers_Glow_Intensity
-        highlight.OutlineTransparency = 0
-        highlight.FillColor = tracer.BrickColor.Color
-        highlight.Parent = tracer
-    end
-
-    local notification = Instance.new("TextLabel")
-    notification.Size = UDim2.new(0, 200, 0, 30)
-    notification.Position = UDim2.new(0.5, -100, 0.6, 0)
-    notification.BackgroundTransparency = 1
-    notification.Text = damage > 0 and ("Hit: " .. math.floor(damage) .. " dmg") or "Miss"
-    notification.TextColor3 = damage > 0 and Colors.Red or Colors.White
-    notification.TextSize = getgenv().Fatality_Bullet_Tracers_Notification_Size
-    notification.Font = Enum.Font.GothamBold
-    notification.Parent = ScreenGui
-
-    spawn(function()
-        wait(getgenv().Fatality_Bullet_Tracers_Duration)
-        tracer:Destroy()
-        notification:Destroy()
-    end)
+    local emitter = Instance.new("ParticleEmitter")
+    emitter.Size = NumberSequence.new(getgenv().Fatality_Hit_Particles_Particle_Size)
+    emitter.Rate = 50
+    emitter.Lifetime = NumberRange.new(0.3, 0.5)
+    emitter.Speed = NumberRange.new(5, 10)
+    emitter.Color = ColorSequence.new(Color3.fromRGB(getgenv().Fatality_Hit_Particles_Particle_Color_R, getgenv().Fatality_Hit_Particles_Particle_Color_G, getgenv().Fatality_Hit_Particles_Particle_Color_B))
+    emitter.Parent = particle
 end
 
-local tracerConnection
-if tracerConnection then tracerConnection:Disconnect() end
+local function createKillEffect(player)
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local effect = Instance.new("PointLight")
+        effect.Brightness = getgenv().Fatality_Kill_Effect_Effect_Intensity
+        effect.Range = 10
+        effect.Color = Color3.fromRGB(255, 0, 0)
+        effect.Parent = player.Character.HumanoidRootPart
+        Debris:AddItem(effect, 0.5)
+    end
+end
 
-tracerConnection = mt.__namecall:Connect(function(self, ...)
-    local args = {...}
-    local method = getnamecallmethod()
+Players.PlayerRemoving:Connect(function(player)
+    local box = game.CoreGui:FindFirstChild(player.Name .. "_Box")
+    if box then box:Destroy() end
+    local healthBar = game.CoreGui:FindFirstChild(player.Name .. "_HealthBar")
+    if healthBar then healthBar:Destroy() end
+end)
+getgenv().Fatality_Custom_Crosshair_Enabled = false
+getgenv().Fatality_Custom_Crosshair_Crosshair_Size = 10
+getgenv().Fatality_Custom_Crosshair_Crosshair_Color_R = 255
+getgenv().Fatality_Custom_Crosshair_Crosshair_Color_G = 255
+getgenv().Fatality_Custom_Crosshair_Crosshair_Color_B = 255
 
-    if getgenv().Fatality_Bullet_Tracers_Enabled and method == "FireServer" and (self.Name:find("Fire") or self.Name:find("Shoot")) then
-        local startPos = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and LocalPlayer.Character.HumanoidRootPart.Position or Camera.CFrame.Position
-        local endPos = args[1] or Camera.CFrame.Position
-        local damage = 0
+getgenv().Fatality_Hitmarker_Enabled = false
+getgenv().Fatality_Hitmarker_Hitmarker_Size = 20
 
-        local raycastParams = RaycastParams.new()
-        raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-        raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
-        local ray = Workspace:Raycast(startPos, (endPos - startPos).Unit * 1000, raycastParams)
-        if ray and ray.Instance:IsDescendantOf(Workspace) then
-            endPos = ray.Position
-            local hitPlayer = Players:GetPlayerFromCharacter(ray.Instance.Parent)
-            if hitPlayer and hitPlayer.Character and hitPlayer.Character:FindFirstChild("Humanoid") then
-                damage = math.random(10, 50) -- Замените на реальный расчёт урона, если доступен
-            end
+getgenv().Fatality_Damage_Indicator_Enabled = false
+getgenv().Fatality_Damage_Indicator_Text_Size = 14
+
+getgenv().Fatality_Model_Swap_Enabled = false
+getgenv().Fatality_Model_Swap_Model_Style = "CJ Ballas"
+
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local Debris = game:GetService("Debris")
+
+local LocalPlayer = Players.LocalPlayer
+local Camera = Workspace.CurrentCamera
+
+local function createCrosshair()
+    local crosshair = Instance.new("Frame")
+    crosshair.Size = UDim2.new(0, getgenv().Fatality_Custom_Crosshair_Crosshair_Size, 0, getgenv().Fatality_Custom_Crosshair_Crosshair_Size)
+    crosshair.Position = UDim2.new(0.5, -getgenv().Fatality_Custom_Crosshair_Crosshair_Size / 2, 0.5, -getgenv().Fatality_Custom_Crosshair_Crosshair_Size / 2)
+    crosshair.BackgroundColor3 = Color3.fromRGB(getgenv().Fatality_Custom_Crosshair_Crosshair_Color_R, getgenv().Fatality_Custom_Crosshair_Crosshair_Color_G, getgenv().Fatality_Custom_Crosshair_Crosshair_Color_B)
+    crosshair.BorderSizePixel = 0
+    crosshair.Parent = game.CoreGui
+    return crosshair
+end
+
+local function createHitmarker()
+    local hitmarker = Instance.new("Frame")
+    hitmarker.Size = UDim2.new(0, getgenv().Fatality_Hitmarker_Hitmarker_Size, 0, getgenv().Fatality_Hitmarker_Hitmarker_Size)
+    hitmarker.Position = UDim2.new(0.5, -getgenv().Fatality_Hitmarker_Hitmarker_Size / 2, 0.5, -getgenv().Fatality_Hitmarker_Hitmarker_Size / 2)
+    hitmarker.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    hitmarker.BorderSizePixel = 0
+    hitmarker.Parent = game.CoreGui
+    Debris:AddItem(hitmarker, 0.2)
+end
+
+local function createDamageIndicator(position, damage)
+    local billboard = Instance.new("BillboardGui")
+    billboard.Size = UDim2.new(0, 100, 0, 30)
+    billboard.AlwaysOnTop = true
+    billboard.StudsOffset = Vector3.new(0, 2, 0)
+    billboard.Adornee = Workspace:FindPartOnRay(Ray.new(position, Vector3.new(0, -10, 0)))
+    billboard.Parent = game.CoreGui
+
+    local text = Instance.new("TextLabel")
+    text.Size = UDim2.new(1, 0, 1, 0)
+    text.BackgroundTransparency = 1
+    text.Text = tostring(damage)
+    text.TextColor3 = Color3.fromRGB(255, 0, 0)
+    text.TextSize = getgenv().Fatality_Damage_Indicator_Text_Size
+    text.Font = Enum.Font.Gotham
+    text.Parent = billboard
+
+    local tween = TweenService:Create(billboard, TweenInfo.new(1, Enum.EasingStyle.Linear), {StudsOffset = Vector3.new(0, 4, 0)})
+    tween:Play()
+    Debris:AddItem(billboard, 1)
+end
+
+local function applyModelSwap(player)
+    if not player.Character then return end
+    local style = getgenv().Fatality_Model_Swap_Model_Style
+    local textures = {
+        ["CJ Ballas"] = {Shirt = "rbxassetid://123456789", Pants = "rbxassetid://987654321", Face = "rbxassetid://456789123", Color = Color3.fromRGB(128, 0, 128)},
+        ["Neon Cyberpunk"] = {Shirt = "rbxassetid://234567890", Pants = "rbxassetid://876543210", Face = "rbxassetid://345678901", Color = Color3.fromRGB(0, 255, 255)},
+        ["Retro Gangster"] = {Shirt = "rbxassetid://345678901", Pants = "rbxassetid://765432109", Face = "rbxassetid://234567890", Color = Color3.fromRGB(50, 50, 50)},
+        ["Anime Thug"] = {Shirt = "rbxassetid://456789012", Pants = "rbxassetid://654321098", Face = "rbxassetid://123456789", Color = Color3.fromRGB(255, 0, 255)},
+        ["Street Punk"] = {Shirt = "rbxassetid://567890123", Pants = "rbxassetid://543210987", Face = "rbxassetid://678901234", Color = Color3.fromRGB(255, 165, 0)}
+    }
+
+    local data = textures[style]
+    if player.Character:FindFirstChild("Shirt") then
+        player.Character.Shirt.ShirtTemplate = data.Shirt
+    else
+        local shirt = Instance.new("Shirt")
+        shirt.ShirtTemplate = data.Shirt
+        shirt.Parent = player.Character
+    end
+
+    if player.Character:FindFirstChild("Pants") then
+        player.Character.Pants.PantsTemplate = data.Pants
+    else
+        local pants = Instance.new("Pants")
+        pants.PantsTemplate = data.Pants
+        pants.Parent = player.Character
+    end
+
+    if player.Character:FindFirstChild("Head") and player.Character.Head:FindFirstChild("face") then
+        player.Character.Head.face.Texture = data.Face
+    end
+
+    for _, part in ipairs(player.Character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.BrickColor = BrickColor.new(data.Color)
         end
-        createTracer(startPos, endPos, damage)
+    end
+end
+
+RunService.RenderStepped:Connect(function()
+    if getgenv().Fatality_Custom_Crosshair_Enabled then
+        local crosshair = game.CoreGui:FindFirstChild("Crosshair")
+        if not crosshair then
+            crosshair = createCrosshair()
+            crosshair.Name = "Crosshair"
+        end
+    else
+        local crosshair = game.CoreGui:FindFirstChild("Crosshair")
+        if crosshair then crosshair:Destroy() end
+    end
+
+    if getgenv().Fatality_Model_Swap_Enabled and LocalPlayer.Character then
+        applyModelSwap(LocalPlayer)
     end
 end)
 
-spawn(function()
-    while wait(0.1) do
+LocalPlayer.CharacterAdded:Connect(function(character)
+    if getgenv().Fatality_Model_Swap_Enabled then
+        applyModelSwap(LocalPlayer)
     end
 end)
