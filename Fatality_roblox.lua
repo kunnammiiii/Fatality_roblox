@@ -172,7 +172,6 @@ for i, tabData in ipairs(TabButtons) do
         CurrentTab = tabData
     end)
 end
-
 local function createTabContent(tabName)
     local Content = Instance.new("ScrollingFrame")
     Content.Name = tabName .. "Content"
@@ -180,15 +179,23 @@ local function createTabContent(tabName)
     Content.Position = UDim2.new(0, 120, 0, 40)
     Content.BackgroundTransparency = 1
     Content.BorderSizePixel = 0
-    Content.ScrollBarThickness = 8
-    Content.CanvasSize = UDim2.new(0, 0, 0, 600)
+    Content.ScrollBarThickness = 6
+    Content.ScrollingDirection = Enum.ScrollingDirection.Y
+    Content.CanvasSize = UDim2.new(0, 0, 0, 0)
+    Content.AutomaticCanvasSize = Enum.AutomaticSize.Y
     Content.Visible = tabName == "Combat"
     Content.Parent = MainFrame
 
     local Layout = Instance.new("UIListLayout")
     Layout.SortOrder = Enum.SortOrder.LayoutOrder
-    Layout.Padding = UDim.new(0, 5)
+    Layout.Padding = UDim.new(0, 8)
     Layout.Parent = Content
+
+    local Padding = Instance.new("UIPadding")
+    Padding.PaddingLeft = UDim.new(0, 5)
+    Padding.PaddingRight = UDim.new(0, 5)
+    Padding.PaddingTop = UDim.new(0, 5)
+    Padding.Parent = Content
 
     return Content
 end
@@ -201,38 +208,42 @@ createTabContent("Settings")
 
 local CombatFeatures = {
     {Name = "Silent Aim", Settings = {
+        {Type = "Mode", Name = "Aim Mode", Options = {"Closest", "FOV", "Priority"}, Selected = "Closest"},
         {Type = "Checkbox", Name = "Raycast Head", Checked = false},
         {Type = "Checkbox", Name = "Raycast Torso", Checked = false},
         {Type = "Checkbox", Name = "Raycast Random", Checked = true},
-        {Type = "Slider", Name = "FOV: 90", Value = 90},
-        {Type = "Slider", Name = "Smoothness: 0.1", Value = 0.1},
-        {Type = "Slider", Name = "Hit Chance: 100%", Value = 100},
+        {Type = "Slider", Name = "FOV", Value = 90, Min = 10, Max = 180},
+        {Type = "Slider", Name = "Smoothness", Value = 0.1, Min = 0, Max = 1},
+        {Type = "Slider", Name = "Hit Chance", Value = 100, Min = 0, Max = 100},
         {Type = "Checkbox", Name = "Prediction", Checked = true},
         {Type = "Checkbox", Name = "Visibility Check", Checked = false},
-        {Type = "Slider", Name = "Distance Limit: 1000", Value = 1000},
+        {Type = "Slider", Name = "Distance Limit", Value = 1000, Min = 50, Max = 5000},
         {Type = "Checkbox", Name = "Team Check", Checked = true}
     }},
     {Name = "Auto Pick", Settings = {
-        {Type = "Checkbox", Name = "Auto Pickup Weapons", Checked = true},
+        {Type = "Mode", Name = "Pickup Mode", Options = {"All", "Weapons Only", "Rare Only"}, Selected = "All"},
+        {Type = "Checkbox", Name = "Auto Pickup", Checked = true},
         {Type = "Checkbox", Name = "Prioritize Rare", Checked = false},
-        {Type = "Slider", Name = "Pickup Range: 50", Value = 50},
+        {Type = "Slider", Name = "Pickup Range", Value = 50, Min = 10, Max = 100},
         {Type = "Checkbox", Name = "Auto Equip", Checked = true}
     }},
     {Name = "Fake Lag", Settings = {
-        {Type = "Slider", Name = "Lag Intensity: 0.5", Value = 0.5},
+        {Type = "Mode", Name = "Lag Mode", Options = {"Constant", "Random", "Adaptive"}, Selected = "Constant"},
+        {Type = "Slider", Name = "Lag Intensity", Value = 0.5, Min = 0.1, Max = 1},
         {Type = "Checkbox", Name = "Packet Loss Mode", Checked = false},
-        {Type = "Slider", Name = "Delay: 100ms", Value = 100},
+        {Type = "Slider", Name = "Delay", Value = 100, Min = 50, Max = 500},
         {Type = "Checkbox", Name = "Jitter", Checked = true}
     }}
 }
 
 local VisualsFeatures = {
     {Name = "ESP Hitbox", Settings = {
+        {Type = "Mode", Name = "Highlight Style", Options = {"Solid", "Outline", "Glow"}, Selected = "Solid"},
         {Type = "Checkbox", Name = "Highlight Local Hitbox", Checked = true},
         {Type = "Checkbox", Name = "Highlight Enemy Hitboxes", Checked = false},
-        {Type = "Slider", Name = "Highlight Color R: 255", Value = 255},
-        {Type = "Slider", Name = "Highlight Color G: 0", Value = 0},
-        {Type = "Slider", Name = "Highlight Color B: 0", Value = 0}
+        {Type = "Slider", Name = "Highlight Color R", Value = 255, Min = 0, Max = 255},
+        {Type = "Slider", Name = "Highlight Color G", Value = 0, Min = 0, Max = 255},
+        {Type = "Slider", Name = "Highlight Color B", Value = 0, Min = 0, Max = 255}
     }}
 }
 
@@ -258,6 +269,10 @@ local function createFeature(feature, parent)
         FeatureToggle.Text = feature.Name .. ": " .. (isEnabled and "ON" or "OFF")
         FeatureToggle.BackgroundColor3 = isEnabled and Colors.DarkPink or Colors.Dark
         getgenv()["Fatality_" .. feature.Name:gsub(" ", "_") .. "_Enabled"] = isEnabled
+        local quickToggle = ScreenGui:FindFirstChild(feature.Name .. "QuickToggle")
+        if quickToggle then
+            quickToggle.BackgroundColor3 = isEnabled and Colors.DarkPink or Colors.Dark
+        end
     end)
 
     local holdStart = nil
@@ -269,69 +284,71 @@ local function createFeature(feature, parent)
 
     FeatureToggle.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 and holdStart and tick() - holdStart >= 0.5 then
-            local QuickToggle = Instance.new("TextButton")
-            QuickToggle.Name = feature.Name .. "QuickToggle"
-            QuickToggle.Size = UDim2.new(0, 30, 0, 30)
-            QuickToggle.Position = UDim2.new(0, 80, 0, 20)
-            QuickToggle.BackgroundColor3 = isEnabled and Colors.DarkPink or Colors.Dark
-            QuickToggle.BorderSizePixel = 0
-            QuickToggle.Text = feature.Name:sub(1, 1)
-            QuickToggle.TextColor3 = Colors.White
-            QuickToggle.TextScaled = true
-            QuickToggle.Font = Enum.Font.Gotham
-            QuickToggle.Parent = ScreenGui
-
-            local QuickCorner = Instance.new("UICorner")
-            QuickCorner.CornerRadius = UDim.new(1, 0)
-            QuickCorner.Parent = QuickToggle
-
-            local QuickShadow = Instance.new("ImageLabel")
-            QuickShadow.Size = UDim2.new(1, 6, 1, 6)
-            QuickShadow.Position = UDim2.new(0, -3, 0, -3)
-            QuickShadow.BackgroundTransparency = 1
-            QuickShadow.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
-            QuickShadow.ImageColor3 = Colors.Dark
-            QuickShadow.ImageTransparency = 0.6
-            QuickShadow.ScaleType = Enum.ScaleType.Slice
-            QuickShadow.SliceCenter = Rect.new(10, 10, 118, 118)
-            QuickShadow.Parent = QuickToggle
-
-            local quickDragging, quickDragStart, quickStartPos = false, nil, nil
-            QuickToggle.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    quickDragging = true
-                    quickDragStart = input.Position
-                    quickStartPos = QuickToggle.Position
-                end
-            end)
-
-            UserInputService.InputChanged:Connect(function(input)
-                if quickDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-                    local delta = input.Position - quickDragStart
-                    QuickToggle.Position = UDim2.new(quickStartPos.X.Scale, quickStartPos.X.Offset + delta.X, quickStartPos.Y.Scale, quickStartPos.Y.Offset + delta.Y)
-                end
-            end)
-
-            UserInputService.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    quickDragging = false
-                end
-            end)
-
-            QuickToggle.MouseButton1Click:Connect(function()
-                isEnabled = not isEnabled
-                FeatureToggle.Text = feature.Name .. ": " .. (isEnabled and "ON" or "OFF")
-                FeatureToggle.BackgroundColor3 = isEnabled and Colors.DarkPink or Colors.Dark
+            if not ScreenGui:FindFirstChild(feature.Name .. "QuickToggle") then
+                local QuickToggle = Instance.new("TextButton")
+                QuickToggle.Name = feature.Name .. "QuickToggle"
+                QuickToggle.Size = UDim2.new(0, 30, 0, 30)
+                QuickToggle.Position = UDim2.new(0, 80, 0, 20)
                 QuickToggle.BackgroundColor3 = isEnabled and Colors.DarkPink or Colors.Dark
-                getgenv()["Fatality_" .. feature.Name:gsub(" ", "_") .. "_Enabled"] = isEnabled
-            end)
+                QuickToggle.BorderSizePixel = 0
+                QuickToggle.Text = feature.Name:sub(1, 1)
+                QuickToggle.TextColor3 = Colors.White
+                QuickToggle.TextScaled = true
+                QuickToggle.Font = Enum.Font.Gotham
+                QuickToggle.Parent = ScreenGui
+
+                local QuickCorner = Instance.new("UICorner")
+                QuickCorner.CornerRadius = UDim.new(1, 0)
+                QuickCorner.Parent = QuickToggle
+
+                local QuickShadow = Instance.new("ImageLabel")
+                QuickShadow.Size = UDim2.new(1, 6, 1, 6)
+                QuickShadow.Position = UDim2.new(0, -3, 0, -3)
+                QuickShadow.BackgroundTransparency = 1
+                QuickShadow.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+                QuickShadow.ImageColor3 = Colors.Dark
+                QuickShadow.ImageTransparency = 0.6
+                QuickShadow.ScaleType = Enum.ScaleType.Slice
+                QuickShadow.SliceCenter = Rect.new(10, 10, 118, 118)
+                QuickShadow.Parent = QuickToggle
+
+                local quickDragging, quickDragStart, quickStartPos = false, nil, nil
+                QuickToggle.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        quickDragging = true
+                        quickDragStart = input.Position
+                        quickStartPos = QuickToggle.Position
+                    end
+                end)
+
+                UserInputService.InputChanged:Connect(function(input)
+                    if quickDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                        local delta = input.Position - quickDragStart
+                        QuickToggle.Position = UDim2.new(quickStartPos.X.Scale, quickStartPos.X.Offset + delta.X, quickStartPos.Y.Scale, quickStartPos.Y.Offset + delta.Y)
+                    end
+                end)
+
+                UserInputService.InputEnded:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        quickDragging = false
+                    end
+                end)
+
+                QuickToggle.MouseButton1Click:Connect(function()
+                    isEnabled = not isEnabled
+                    FeatureToggle.Text = feature.Name .. ": " .. (isEnabled and "ON" or "OFF")
+                    FeatureToggle.BackgroundColor3 = isEnabled and Colors.DarkPink or Colors.Dark
+                    QuickToggle.BackgroundColor3 = isEnabled and Colors.DarkPink or Colors.Dark
+                    getgenv()["Fatality_" .. feature.Name:gsub(" ", "_") .. "_Enabled"] = isEnabled
+                end)
+            end
         end
         holdStart = nil
     end)
 
     local SettingsFrame = Instance.new("Frame")
     SettingsFrame.Name = feature.Name .. "Settings"
-    SettingsFrame.Size = UDim2.new(1, 0, 0, #feature.Settings * 22)
+    SettingsFrame.Size = UDim2.new(1, 0, 0, #feature.Settings * 25)
     SettingsFrame.BackgroundColor3 = Colors.White
     SettingsFrame.BorderSizePixel = 0
     SettingsFrame.LayoutOrder = 1
@@ -343,53 +360,153 @@ local function createFeature(feature, parent)
 
     local SettingsLayout = Instance.new("UIListLayout")
     SettingsLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    SettingsLayout.Padding = UDim.new(0, 2)
+    SettingsLayout.Padding = UDim.new(0, 5)
     SettingsLayout.Parent = SettingsFrame
 
+    local SettingsPadding = Instance.new("UIPadding")
+    SettingsPadding.PaddingLeft = UDim.new(0, 5)
+    SettingsPadding.PaddingTop = UDim.new(0, 5)
+    SettingsPadding.Parent = SettingsFrame
+
     for _, setting in ipairs(feature.Settings) do
-        local SettingButton = Instance.new("TextButton")
-        SettingButton.Name = setting.Name
-        SettingButton.Size = UDim2.new(1, -10, 0, 20)
-        SettingButton.Position = UDim2.new(0, 5, 0, 0)
-        SettingButton.BackgroundColor3 = Colors.Dark
-        SettingButton.BorderSizePixel = 0
-        SettingButton.Text = setting.Name .. (setting.Type == "Checkbox" and (setting.Checked and " [ON]" or " [OFF]") or "")
-        SettingButton.TextColor3 = Colors.Red
-        SettingButton.TextScaled = true
-        SettingButton.Font = Enum.Font.Gotham
-        SettingButton.Parent = SettingsFrame
-
-        local SettingCorner = Instance.new("UICorner")
-        SettingCorner.CornerRadius = UDim.new(0, 2)
-        SettingCorner.Parent = SettingButton
-
         if setting.Type == "Checkbox" then
+            local SettingButton = Instance.new("TextButton")
+            SettingButton.Name = setting.Name
+            SettingButton.Size = UDim2.new(1, -10, 0, 20)
+            SettingButton.BackgroundColor3 = Colors.Dark
+            SettingButton.BorderSizePixel = 0
+            SettingButton.Text = setting.Name .. (setting.Checked and " [ON]" or " [OFF]")
+            SettingButton.TextColor3 = Colors.Red
+            SettingButton.TextScaled = true
+            SettingButton.Font = Enum.Font.Gotham
+            SettingButton.Parent = SettingsFrame
+
+            local SettingCorner = Instance.new("UICorner")
+            SettingCorner.CornerRadius = UDim.new(0, 2)
+            SettingCorner.Parent = SettingButton
+
             local checked = setting.Checked
             SettingButton.MouseButton1Click:Connect(function()
                 checked = not checked
                 SettingButton.Text = setting.Name .. (checked and " [ON]" or " [OFF]")
                 getgenv()["Fatality_" .. feature.Name:gsub(" ", "_") .. "_" .. setting.Name:gsub(" ", "_"):gsub(":", "")] = checked
             end)
-        else
-            local ValueBox = Instance.new("TextBox")
-            ValueBox.Size = UDim2.new(0, 60, 1, 0)
-            ValueBox.Position = UDim2.new(1, -70, 0, 0)
-            ValueBox.BackgroundColor3 = Colors.DarkPink
-            ValueBox.BorderSizePixel = 0
-            ValueBox.Text = tostring(setting.Value)
-            ValueBox.TextColor3 = Colors.White
-            ValueBox.TextScaled = true
-            ValueBox.Font = Enum.Font.Gotham
-            ValueBox.Parent = SettingButton
+        elseif setting.Type == "Slider" then
+            local SliderFrame = Instance.new("Frame")
+            SliderFrame.Name = setting.Name
+            SliderFrame.Size = UDim2.new(1, -10, 0, 20)
+            SliderFrame.BackgroundColor3 = Colors.Dark
+            SliderFrame.BorderSizePixel = 0
+            SliderFrame.Parent = SettingsFrame
 
-            local ValueCorner = Instance.new("UICorner")
-            ValueCorner.CornerRadius = UDim.new(0, 2)
-            ValueCorner.Parent = ValueBox
+            local SliderCorner = Instance.new("UICorner")
+            SliderCorner.CornerRadius = UDim.new(0, 2)
+            SliderCorner.Parent = SliderFrame
 
-            ValueBox.FocusLost:Connect(function()
-                local val = tonumber(ValueBox.Text) or setting.Value
-                ValueBox.Text = tostring(val)
-                getgenv()["Fatality_" .. feature.Name:gsub(" ", "_") .. "_" .. setting.Name:gsub(" ", "_"):gsub(":", "")] = val
+            local SliderLabel = Instance.new("TextLabel")
+            SliderLabel.Size = UDim2.new(0.5, 0, 1, 0)
+            SliderLabel.BackgroundTransparency = 1
+            SliderLabel.Text = setting.Name .. ": " .. setting.Value
+            SliderLabel.TextColor3 = Colors.Red
+            SliderLabel.TextScaled = true
+            SliderLabel.Font = Enum.Font.Gotham
+            SliderLabel.Parent = SliderFrame
+
+            local SliderTrack = Instance.new("Frame")
+            SliderTrack.Size = UDim2.new(0.5, -10, 0, 4)
+            SliderTrack.Position = UDim2.new(0.5, 5, 0.5, -2)
+            SliderTrack.BackgroundColor3 = Colors.White
+            SliderTrack.BorderSizePixel = 0
+            SliderTrack.Parent = SliderFrame
+
+            local SliderTrackCorner = Instance.new("UICorner")
+            SliderTrackCorner.CornerRadius = UDim.new(0, 2)
+            SliderTrackCorner.Parent = SliderTrack
+
+            local SliderFill = Instance.new("Frame")
+            SliderFill.Size = UDim2.new((setting.Value - setting.Min) / (setting.Max - setting.Min), 0, 1, 0)
+            SliderFill.BackgroundColor3 = Colors.DarkPink
+            SliderFill.BorderSizePixel = 0
+            SliderFill.Parent = SliderTrack
+
+            local SliderFillCorner = Instance.new("UICorner")
+            SliderFillCorner.CornerRadius = UDim.new(0, 2)
+            SliderFillCorner.Parent = SliderFill
+
+            local SliderButton = Instance.new("TextButton")
+            SliderButton.Size = UDim2.new(1, 0, 1, 0)
+            SliderButton.BackgroundTransparency = 1
+            SliderButton.Text = ""
+            SliderButton.Parent = SliderTrack
+
+            local draggingSlider = false
+            SliderButton.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    draggingSlider = true
+                end
+            end)
+
+            UserInputService.InputChanged:Connect(function(input)
+                if draggingSlider and input.UserInputType == Enum.UserInputType.MouseMovement then
+                    local mouseX = input.Position.X
+                    local trackX = SliderTrack.AbsolutePosition.X
+                    local trackWidth = SliderTrack.AbsoluteSize.X
+                    local relative = math.clamp((mouseX - trackX) / trackWidth, 0, 1)
+                    local value = setting.Min + (setting.Max - setting.Min) * relative
+                    value = math.round(value * 10) / 10
+                    SliderFill.Size = UDim2.new(relative, 0, 1, 0)
+                    SliderLabel.Text = setting.Name .. ": " .. value
+                    getgenv()["Fatality_" .. feature.Name:gsub(" ", "_") .. "_" .. setting.Name:gsub(" ", "_"):gsub(":", "")] = value
+                end
+            end)
+
+            UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    draggingSlider = false
+                end
+            end)
+        elseif setting.Type == "Mode" then
+            local ModeFrame = Instance.new("Frame")
+            ModeFrame.Name = setting.Name
+            ModeFrame.Size = UDim2.new(1, -10, 0, 20)
+            ModeFrame.BackgroundColor3 = Colors.Dark
+            ModeFrame.BorderSizePixel = 0
+            ModeFrame.Parent = SettingsFrame
+
+            local ModeCorner = Instance.new("UICorner")
+            ModeCorner.CornerRadius = UDim.new(0, 2)
+            ModeCorner.Parent = ModeFrame
+
+            local ModeLabel = Instance.new("TextLabel")
+            ModeLabel.Size = UDim2.new(0.5, 0, 1, 0)
+            ModeLabel.BackgroundTransparency = 1
+            ModeLabel.Text = setting.Name .. ": " .. setting.Selected
+            ModeLabel.TextColor3 = Colors.Red
+            ModeLabel.TextScaled = true
+            ModeLabel.Font = Enum.Font.Gotham
+            ModeLabel.Parent = ModeFrame
+
+            local ModeButton = Instance.new("TextButton")
+            ModeButton.Size = UDim2.new(0.5, -10, 1, 0)
+            ModeButton.Position = UDim2.new(0.5, 5, 0, 0)
+            ModeButton.BackgroundColor3 = Colors.DarkPink
+            ModeButton.BorderSizePixel = 0
+            ModeButton.Text = "Next"
+            ModeButton.TextColor3 = Colors.White
+            ModeButton.TextScaled = true
+            ModeButton.Font = Enum.Font.Gotham
+            ModeButton.Parent = ModeFrame
+
+            local ModeButtonCorner = Instance.new("UICorner")
+            ModeButtonCorner.CornerRadius = UDim.new(0, 2)
+            ModeButtonCorner.Parent = ModeButton
+
+            local currentIndex = table.find(setting.Options, setting.Selected) or 1
+            ModeButton.MouseButton1Click:Connect(function()
+                currentIndex = currentIndex % #setting.Options + 1
+                local newMode = setting.Options[currentIndex]
+                ModeLabel.Text = setting.Name .. ": " .. newMode
+                getgenv()["Fatality_" .. feature.Name:gsub(" ", "_") .. "_" .. setting.Name:gsub(" ", "_"):gsub(":", "")] = newMode
             end)
         end
     end
@@ -401,9 +518,6 @@ end
 for _, feature in ipairs(VisualsFeatures) do
     createFeature(feature, VisualsContent)
 end
-
-CombatContent.CanvasSize = UDim2.new(0, 0, 0, #CombatFeatures * 150)
-VisualsContent.CanvasSize = UDim2.new(0, 0, 0, #VisualsFeatures * 100)
 
 local firstTab = TabButtons[1]
 local firstTabButton = TabsFrame:FindFirstChild(firstTab.Name .. "Tab")
@@ -489,6 +603,7 @@ local oldNamecall = mt.__namecall
 setreadonly(mt, false)
 
 getgenv().Fatality_Silent_Aim_Enabled = false
+getgenv().Fatality_Silent_Aim_Aim_Mode = "Closest"
 getgenv().Fatality_Silent_Aim_Raycast_Head = false
 getgenv().Fatality_Silent_Aim_Raycast_Torso = false
 getgenv().Fatality_Silent_Aim_Raycast_Random = true
@@ -504,6 +619,7 @@ local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local NetworkClient = game:GetService("NetworkClient")
 
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
@@ -511,7 +627,8 @@ local Mouse = LocalPlayer:GetMouse()
 
 local function getClosestPlayer()
     local closestPlayer = nil
-    local shortestDistance = getgenv().Fatality_Silent_Aim_FOV
+    local shortestDistance = math.huge
+    local fovDistance = getgenv().Fatality_Silent_Aim_FOV
 
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
@@ -522,21 +639,33 @@ local function getClosestPlayer()
             local screenPoint, onScreen = Camera:WorldToScreenPoint(player.Character.HumanoidRootPart.Position)
             if not onScreen then continue end
 
-            local fovDistance = (Vector2.new(screenPoint.X, screenPoint.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
-            if fovDistance < shortestDistance then
+            local mode = getgenv().Fatality_Silent_Aim_Aim_Mode
+            local currentDistance = mode == "FOV" and (Vector2.new(screenPoint.X, screenPoint.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude or distance
+
+            if mode == "Priority" then
+                if player.Character.Humanoid.Health > 0 then
+                    currentDistance = player.Character.Humanoid.Health
+                else
+                    continue
+                end
+            end
+
+            if currentDistance < (mode == "FOV" and fovDistance or shortestDistance) then
                 if getgenv().Fatality_Silent_Aim_Visibility_Check then
-                    local ray = Camera:ScreenPointToRay(Mouse.X, Mouse.Y)
+                    local ray = Camera:ScreenPointToRay(screenPoint.X, screenPoint.Y)
                     local raycastParams = RaycastParams.new()
                     raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
                     raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
-                    local result = Workspace:Raycast(ray.Origin, ray.Direction * distance, raycastParams)
+                    local result = Workspace:Raycast(ray.Origin, (player.Character.HumanoidRootPart.Position - ray.Origin).Unit * distance, raycastParams)
                     if result and result.Instance:IsDescendantOf(player.Character) then
                         closestPlayer = player
-                        shortestDistance = fovDistance
+                        shortestDistance = currentDistance
+                        if mode == "FOV" then fovDistance = currentDistance end
                     end
                 else
                     closestPlayer = player
-                    shortestDistance = fovDistance
+                    shortestDistance = currentDistance
+                    if mode == "FOV" then fovDistance = currentDistance end
                 end
             end
         end
@@ -561,7 +690,7 @@ mt.__namecall = newcclosure(function(self, ...)
     local args = {...}
     local method = getnamecallmethod()
 
-    if getgenv().Fatality_Silent_Aim_Enabled and method == "FireServer" and (self.Name:find("Aim") or self.Name:find("Shoot")) then
+    if getgenv().Fatality_Silent_Aim_Enabled and method == "FireServer" and (self.Name:find("Fire") or self.Name:find("Shoot")) then
         local hitChance = getgenv().Fatality_Silent_Aim_Hit_Chance / 100
         if math.random() > hitChance then return oldNamecall(self, ...) end
 
@@ -570,9 +699,11 @@ mt.__namecall = newcclosure(function(self, ...)
             local targetPart = getTargetPart(closest)
             if getgenv().Fatality_Silent_Aim_Prediction then
                 local velocity = closest.Character.HumanoidRootPart.Velocity
-                targetPart.CFrame = targetPart.CFrame + (velocity * getgenv().Fatality_Silent_Aim_Smoothness)
+                local predictedPos = targetPart.Position + (velocity * getgenv().Fatality_Silent_Aim_Smoothness)
+                args[1] = predictedPos
+            else
+                args[1] = targetPart.Position
             end
-            args[2] = targetPart
         end
     end
 
@@ -582,7 +713,8 @@ end)
 setreadonly(mt, true)
 
 getgenv().Fatality_Auto_Pick_Enabled = false
-getgenv().Fatality_Auto_Pick_Auto_Pickup_Weapons = true
+getgenv().Fatality_Auto_Pick_Pickup_Mode = "All"
+getgenv().Fatality_Auto_Pick_Auto_Pickup = true
 getgenv().Fatality_Auto_Pick_Prioritize_Rare = false
 getgenv().Fatality_Auto_Pick_Pickup_Range = 50
 getgenv().Fatality_Auto_Pick_Auto_Equip = true
@@ -592,17 +724,30 @@ RunService.Heartbeat:Connect(function()
     local char = LocalPlayer.Character
     if not char or not char:FindFirstChild("HumanoidRootPart") then return end
 
-    for _, obj in ipairs(Workspace:GetChildren()) do
-        if obj:IsA("Tool") or obj.Name:find("Weapon") then
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if obj:IsA("Tool") and obj:FindFirstChild("Handle") then
+            local mode = getgenv().Fatality_Auto_Pick_Pickup_Mode
+            if mode == "Weapons Only" and not obj.Name:find("Weapon") then continue end
+            if mode == "Rare Only" and (not obj:FindFirstChild("Rarity") or obj.Rarity.Value ~= "Rare") then continue end
             local dist = (char.HumanoidRootPart.Position - obj.Handle.Position).Magnitude
             if dist < getgenv().Fatality_Auto_Pick_Pickup_Range then
-                if getgenv().Fatality_Auto_Pick_Prioritize_Rare and obj.Rarity.Value ~= "Rare" then continue end
-                obj.Handle.CFrame = char.HumanoidRootPart.CFrame
-                firetouchinterest(char.HumanoidRootPart, obj.Handle, 0)
-                wait(0.1)
-                firetouchinterest(char.HumanoidRootPart, obj.Handle, 1)
-                if getgenv().Fatality_Auto_Pick_Auto_Equip then
-                    obj.Parent = LocalPlayer.Backpack
+                if getgenv().Fatality_Auto_Pick_Prioritize_Rare and obj.Rarity and obj.Rarity.Value ~= "Rare" then continue end
+                if getgenv().Fatality_Auto_Pick_Auto_Pickup then
+                    local remote = obj:FindFirstChild("Remote") or obj:FindFirstChildOfClass("RemoteEvent")
+                    if remote then
+                        remote:FireServer("Pickup")
+                    else
+                        obj.Handle.CFrame = char.HumanoidRootPart.CFrame
+                        firetouchinterest(char.HumanoidRootPart, obj.Handle, 0)
+                        wait(0.1)
+                        firetouchinterest(char.HumanoidRootPart, obj.Handle, 1)
+                    end
+                    if getgenv().Fatality_Auto_Pick_Auto_Equip then
+                        if obj.Parent ~= LocalPlayer.Backpack then
+                            obj.Parent = LocalPlayer.Backpack
+                            LocalPlayer.Character.Humanoid:EquipTool(obj)
+                        end
+                    end
                 end
             end
         end
@@ -610,6 +755,7 @@ RunService.Heartbeat:Connect(function()
 end)
 
 getgenv().Fatality_Fake_Lag_Enabled = false
+getgenv().Fatality_Fake_Lag_Lag_Mode = "Constant"
 getgenv().Fatality_Fake_Lag_Lag_Intensity = 0.5
 getgenv().Fatality_Fake_Lag_Packet_Loss_Mode = false
 getgenv().Fatality_Fake_Lag_Delay = 100
@@ -617,25 +763,47 @@ getgenv().Fatality_Fake_Lag_Jitter = true
 
 local lagConnection
 local lastUpdate = tick()
+local storedPosition = nil
 
 if lagConnection then lagConnection:Disconnect() end
 
 lagConnection = RunService.Heartbeat:Connect(function()
-    if not getgenv().Fatality_Fake_Lag_Enabled then return end
+    if not getgenv().Fatality_Fake_Lag_Enabled then
+        storedPosition = nil
+        return
+    end
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+
     local currentTime = tick()
     local delay = getgenv().Fatality_Fake_Lag_Delay / 1000
-    if currentTime - lastUpdate < delay * getgenv().Fatality_Fake_Lag_Lag_Intensity then return end
+    local mode = getgenv().Fatality_Fake_Lag_Lag_Mode
 
-    if getgenv().Fatality_Fake_Lag_Packet_Loss_Mode and math.random() < 0.3 then return end
-
-    if getgenv().Fatality_Fake_Lag_Jitter then
-        LocalPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(math.random(-1,1), 0, math.random(-1,1)) * 0.1
+    if mode == "Random" then
+        delay = delay * math.random(0.5, 1.5)
+    elseif mode == "Adaptive" then
+        delay = delay * (1 + (LocalPlayer.Character.Humanoid.MoveDirection.Magnitude > 0 and 0.5 or 0))
     end
 
+    if currentTime - lastUpdate < delay * getgenv().Fatality_Fake_Lag_Lag_Intensity then
+        if storedPosition then
+            char.HumanoidRootPart.CFrame = storedPosition
+        end
+        if getgenv().Fatality_Fake_Lag_Packet_Loss_Mode and math.random() < 0.3 then
+            return
+        end
+        return
+    end
+
+    storedPosition = char.HumanoidRootPart.CFrame
+    if getgenv().Fatality_Fake_Lag_Jitter then
+        char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame + Vector3.new(math.random(-1,1), 0, math.random(-1,1)) * 0.1
+    end
     lastUpdate = currentTime
 end)
 
 getgenv().Fatality_ESP_Hitbox_Enabled = false
+getgenv().Fatality_ESP_Hitbox_Highlight_Style = "Solid"
 getgenv().Fatality_ESP_Hitbox_Highlight_Local_Hitbox = true
 getgenv().Fatality_ESP_Hitbox_Highlight_Enemy_Hitboxes = false
 getgenv().Fatality_ESP_Hitbox_Highlight_Color_R = 255
@@ -653,8 +821,9 @@ local function createHighlight(part)
         getgenv().Fatality_ESP_Hitbox_Highlight_Color_B
     )
     highlight.OutlineColor = Colors.White
-    highlight.FillTransparency = 0.5
-    highlight.OutlineTransparency = 0
+    local style = getgenv().Fatality_ESP_Hitbox_Highlight_Style
+    highlight.FillTransparency = style == "Solid" and 0.5 or (style == "Outline" and 1 or 0.3)
+    highlight.OutlineTransparency = style == "Outline" and 0 or 0.5
     highlight.Parent = part
     return highlight
 end
